@@ -1,3 +1,4 @@
+/* ---------- state palettes (Google Material colors) ---------- */
 :root {
   --bg: #E8F0FE;
   --ring-bg: #D2E3FC;
@@ -11,6 +12,31 @@
   --text-muted: #5F6368;
 }
 
+/* paused state -> yellow (Google's Material amber/yellow) */
+.timer-card.paused {
+  --bg: #FEF7E0;
+  --ring-bg: #FEEFC3;
+  --ring-fg: #F9AB00;
+  --btn-bg: #FEEFC3;
+  --btn-bg-hover: #FDE293;
+  --btn-bg-active: #FCD66D;
+  --icon: #F9AB00;
+  --icon-muted: #936F00;
+}
+
+/* finished state -> solid red, no animation */
+.timer-card.finished {
+  --bg: #FCE8E6;
+  --ring-bg: #FAD2CF;
+  --ring-fg: #EA4335;
+  --btn-bg: #FAD2CF;
+  --btn-bg-hover: #F7B6B0;
+  --btn-bg-active: #F19891;
+  --icon: #EA4335;
+  --icon-muted: #B31412;
+}
+
+/* ---------- layout ---------- */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -28,17 +54,165 @@ html, body {
   color: var(--text);
 }
 
+[hidden] { display: none !important; }
+
 .timer-card {
   position: relative;
   width: 100vw;
   height: 100vh;
   background: var(--bg);
   display: flex;
-  flex-direction: column;
-  padding: clamp(16px, 3vmin, 32px);
+  flex-direction: row;
+  transition: background-color 200ms ease;
 }
 
-/* draggable area for moving the window on mac (the top inset above content) */
+.timer-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(16px, 3vmin, 32px);
+  position: relative;
+  min-width: 0;
+}
+
+/* ---------- queue panel ---------- */
+.queue-panel {
+  width: clamp(220px, 26vw, 320px);
+  display: flex;
+  flex-direction: column;
+  padding: clamp(20px, 4vmin, 36px) clamp(14px, 2vmin, 22px) clamp(16px, 3vmin, 28px);
+  background: rgba(255, 255, 255, 0.5);
+  border-right: 1px solid rgba(60, 64, 67, 0.08);
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: background-color 200ms ease, border-color 200ms ease;
+  -webkit-app-region: no-drag;
+}
+
+.timer-card.paused .queue-panel {
+  background: rgba(255, 255, 255, 0.55);
+  border-right-color: rgba(146, 110, 0, 0.15);
+}
+
+.timer-card.finished .queue-panel {
+  background: rgba(255, 255, 255, 0.55);
+  border-right-color: rgba(179, 20, 18, 0.15);
+}
+
+.queue-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  padding-left: 4px;
+}
+
+.queue-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.queue-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  transition: background-color 120ms ease, opacity 200ms ease;
+}
+
+.queue-row:hover { background: rgba(0, 0, 0, 0.03); }
+
+.queue-row.active {
+  background: rgba(26, 115, 232, 0.10);
+}
+
+.timer-card.paused .queue-row.active {
+  background: rgba(249, 171, 0, 0.14);
+}
+
+.timer-card.finished .queue-row.active {
+  background: rgba(234, 67, 53, 0.10);
+}
+
+.queue-row.completed {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.queue-row.completed .q-play {
+  opacity: 0.5;
+}
+
+.q-index {
+  width: 1.8em;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  text-align: right;
+}
+
+.queue-row input {
+  width: 1.9em;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.04);
+  border: none;
+  border-radius: 4px;
+  padding: 4px 0;
+  font: inherit;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.queue-row input:focus {
+  background: rgba(26, 115, 232, 0.14);
+}
+
+.timer-card.paused .queue-row input:focus {
+  background: rgba(249, 171, 0, 0.16);
+}
+
+.queue-row .q-colon {
+  color: var(--text-muted);
+  margin: 0 1px;
+}
+
+.q-play {
+  margin-left: auto;
+  background: var(--btn-bg);
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--icon);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 120ms ease, color 200ms ease;
+  flex-shrink: 0;
+}
+
+.q-play:hover { background: var(--btn-bg-hover); }
+.q-play:active { background: var(--btn-bg-active); }
+.q-play:disabled { opacity: 0.4; cursor: default; }
+
+.q-play svg {
+  width: 14px;
+  height: 14px;
+}
+
 .drag-region {
   position: absolute;
   top: 0;
@@ -68,7 +242,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 120ms ease;
+  transition: background-color 120ms ease, color 200ms ease;
   -webkit-app-region: no-drag;
 }
 
@@ -80,7 +254,7 @@ html, body {
   height: 60%;
 }
 
-/* main display */
+/* ---------- progress ring ---------- */
 .timer-display {
   flex: 1;
   display: flex;
@@ -93,7 +267,8 @@ html, body {
 .progress-ring {
   width: min(70vh, 70vw);
   height: min(70vh, 70vw);
-  transform: rotate(-90deg);
+  /* scaleX(-1) flips the draw direction so the ring fills counter-clockwise from 12 o'clock */
+  transform: scaleX(-1) rotate(-90deg);
   display: block;
 }
 
@@ -102,15 +277,18 @@ html, body {
   stroke-width: 4;
 }
 
-.ring-bg { stroke: var(--ring-bg); }
+.ring-bg {
+  stroke: var(--ring-bg);
+  transition: stroke 200ms ease;
+}
 
 .ring-fg {
   stroke: var(--ring-fg);
   stroke-linecap: round;
-  transition: stroke-dashoffset 120ms linear;
+  transition: stroke-dashoffset 120ms linear, stroke 200ms ease;
 }
 
-/* time text overlay */
+/* ---------- time display ---------- */
 .time-area {
   position: absolute;
   inset: 0;
@@ -118,13 +296,12 @@ html, body {
   align-items: center;
   justify-content: center;
   font-weight: 400;
-  font-size: min(13vh, 13vw);
+  font-size: min(14vh, 14vw);
   line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.time-area:has(.time-view:not([hidden])) {
-  font-size: min(15vh, 15vw);
+  letter-spacing: 0;
+  /* tabular-nums forces every digit to occupy the same advance width — kills the jitter */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 .time-view {
@@ -136,29 +313,27 @@ html, body {
 }
 
 .time-view:hover, .time-view:focus-visible {
-  background: rgba(26, 115, 232, 0.08);
+  background: rgba(0, 0, 0, 0.04);
 }
 
-.timer-running .time-view {
+.timer-card.timer-running .time-view,
+.timer-card.finished .time-view {
   cursor: default;
 }
 
-.timer-running .time-view:hover,
-.timer-running .time-view:focus-visible {
+.timer-card.timer-running .time-view:hover,
+.timer-card.timer-running .time-view:focus-visible,
+.timer-card.finished .time-view:hover,
+.timer-card.finished .time-view:focus-visible {
   background: transparent;
 }
 
-[hidden] { display: none !important; }
-
+/* edit mode: colons, no h/m/s labels, all digits the same size as view mode */
 .time-edit {
   display: flex;
   align-items: baseline;
-  gap: 0.15em;
-}
-
-.time-field {
-  display: flex;
-  align-items: baseline;
+  /* tighten the spacing so HH:MM:SS fits well inside the circle */
+  letter-spacing: -0.02em;
 }
 
 .time-edit input {
@@ -168,6 +343,7 @@ html, body {
   border: none;
   outline: none;
   font: inherit;
+  font-variant-numeric: tabular-nums;
   color: inherit;
   padding: 0;
   border-radius: 0.1em;
@@ -180,14 +356,16 @@ html, body {
   background: rgba(26, 115, 232, 0.16);
 }
 
-.time-label {
-  font-size: 0.32em;
-  color: var(--text-muted);
-  margin: 0 0.25em 0 0.05em;
-  font-weight: 400;
+.timer-card.paused .time-edit input:focus {
+  background: rgba(249, 171, 0, 0.18);
 }
 
-/* bottom controls */
+.time-colon {
+  margin: 0 0.02em;
+  color: var(--text);
+}
+
+/* ---------- bottom controls ---------- */
 .controls {
   display: flex;
   justify-content: center;
@@ -208,7 +386,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 120ms ease, transform 80ms ease;
+  transition: background-color 120ms ease, color 200ms ease, transform 80ms ease;
 }
 
 .control-btn:hover { background: var(--btn-bg-hover); }
@@ -220,14 +398,4 @@ html, body {
 .control-btn svg {
   width: clamp(22px, 3.2vmin, 36px);
   height: clamp(22px, 3.2vmin, 36px);
-}
-
-/* completion flash for visual feedback when timer ends */
-.timer-card.finished {
-  animation: finish-pulse 1s ease-in-out infinite;
-}
-
-@keyframes finish-pulse {
-  0%, 100% { background: var(--bg); }
-  50% { background: #FCE8E6; }
 }

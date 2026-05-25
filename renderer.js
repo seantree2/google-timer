@@ -3,8 +3,6 @@ const ICONS = {
   play:  '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>',
   pause: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>',
   reset: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>',
-  volumeOn:  '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>',
-  volumeOff: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>',
   fullscreen:     '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>',
   fullscreenExit: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>'
 };
@@ -23,26 +21,30 @@ const inputList      = [inputs.h, inputs.m, inputs.s];
 const progress       = document.getElementById('progress');
 const startPauseBtn  = document.getElementById('start-pause-btn');
 const resetBtn       = document.getElementById('reset-btn');
-const muteBtn        = document.getElementById('mute-btn');
 const fullscreenBtn  = document.getElementById('fullscreen-btn');
+const queueList      = document.getElementById('queue-list');
+
+const QUEUE_LENGTH   = 10;
+const queueRows      = [];           // array of { row, h, m, s, play, completed }
+let   activeQueueIdx = -1;            // index of the queue row currently driving the main timer, -1 if none
 
 // ===== state =====
 const R = 92;
 const CIRCUMFERENCE = 2 * Math.PI * R;
 progress.style.strokeDasharray = CIRCUMFERENCE;
-progress.style.strokeDashoffset = 0;
+progress.style.strokeDashoffset = CIRCUMFERENCE; // start empty: ring fills as time passes
 
-let totalSeconds       = 300; // 5:00 default, matching Google
-let remainingMs        = 300_000;
-let runStartTimestamp  = 0;
+let totalSeconds        = 300; // 5:00 default
+let remainingMs         = 300_000;
+let runStartTimestamp   = 0;
 let runStartRemainingMs = 0;
-let tickerId           = null;
-let isRunning          = false;
-let isFinished         = false;
-let isMuted            = false;
-let editMode           = false;
-let alarmIntervalId    = null;
-let audioCtx           = null;
+let tickerId            = null;
+let isRunning           = false;
+let isPaused            = false;
+let isFinished          = false;
+let editMode            = false;
+let alarmIntervalId     = null;
+let audioCtx            = null;
 
 // ===== rendering =====
 function formatTime(totalMs) {
@@ -54,13 +56,27 @@ function formatTime(totalMs) {
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
 }
 
+function progressFraction() {
+  // Fraction of the ring that should be FILLED.
+  // Google's behavior: ring starts empty and fills as time elapses.
+  if (totalSeconds <= 0) return 0;
+  const elapsedMs = Math.max(0, totalSeconds * 1000 - remainingMs);
+  return Math.min(1, elapsedMs / (totalSeconds * 1000));
+}
+
+function applyProgress() {
+  const filled = progressFraction();
+  // strokeDashoffset = circumference means 0% drawn; offset = 0 means 100% drawn.
+  // We want filled portion drawn, so offset = circumference * (1 - filled).
+  progress.style.strokeDashoffset = CIRCUMFERENCE * (1 - filled);
+}
+
 function render() {
   timeContent.textContent = formatTime(remainingMs);
-  const fraction = totalSeconds > 0 ? Math.max(0, remainingMs / 1000) / totalSeconds : 0;
-  progress.style.strokeDashoffset = CIRCUMFERENCE * (1 - fraction);
+  applyProgress();
   startPauseBtn.innerHTML = isRunning ? ICONS.pause : ICONS.play;
-  muteBtn.innerHTML = isMuted ? ICONS.volumeOff : ICONS.volumeOn;
   card.classList.toggle('timer-running', isRunning);
+  card.classList.toggle('paused', isPaused);
   card.classList.toggle('finished', isFinished);
 }
 
@@ -69,6 +85,7 @@ function start() {
   if (remainingMs <= 0 || totalSeconds <= 0) return;
   clearFinished();
   isRunning = true;
+  isPaused = false;
   runStartTimestamp = performance.now();
   runStartRemainingMs = remainingMs;
   tickerId = setInterval(tick, 50);
@@ -82,14 +99,14 @@ function tick() {
     remainingMs = 0;
     stopTicker();
     isRunning = false;
+    isPaused = false;
     onFinish();
     render();
     return;
   }
-  // micro-render: avoid full render to keep things smooth
+  // micro-render: skip full render to keep things smooth
   timeContent.textContent = formatTime(remainingMs);
-  const fraction = totalSeconds > 0 ? (remainingMs / 1000) / totalSeconds : 0;
-  progress.style.strokeDashoffset = CIRCUMFERENCE * (1 - fraction);
+  applyProgress();
 }
 
 function stopTicker() {
@@ -101,26 +118,36 @@ function pause() {
   if (!isRunning) return;
   stopTicker();
   isRunning = false;
+  isPaused = true;
   render();
 }
 
 function reset() {
   stopTicker();
   isRunning = false;
+  isPaused = false;
   clearFinished();
   remainingMs = totalSeconds * 1000;
+  // Reset clears the "active" highlight on the queue row but keeps completed marks intact.
+  if (activeQueueIdx >= 0 && queueRows[activeQueueIdx]) {
+    queueRows[activeQueueIdx].row.classList.remove('active');
+    activeQueueIdx = -1;
+  }
   render();
 }
 
 function onFinish() {
   isFinished = true;
-  if (!isMuted) playAlarm();
+  isPaused = false;
+  markActiveQueueComplete();
+  playAlarm();
 }
 
 function clearFinished() {
   if (!isFinished) return;
   isFinished = false;
   stopAlarm();
+  render(); // ensure the .finished class is removed immediately
 }
 
 // ===== editing =====
@@ -136,7 +163,6 @@ function enterEditMode() {
 
   timeView.hidden = true;
   timeEdit.hidden = false;
-  // focus first non-zero field, else minutes (Google's typical default)
   const focusTarget = inputs.h.value !== '00' ? inputs.h
                     : inputs.m.value !== '00' ? inputs.m
                     : inputs.m;
@@ -150,6 +176,8 @@ function commitEdit() {
   const s = parseInt(inputs.s.value, 10) || 0;
   totalSeconds = Math.min(99 * 3600 + 59 * 60 + 59, h * 3600 + m * 60 + s);
   remainingMs = totalSeconds * 1000;
+  // Setting a new total means we've made no progress yet — reset paused state too.
+  isPaused = false;
 }
 
 function exitEditMode(commit = true) {
@@ -161,7 +189,7 @@ function exitEditMode(commit = true) {
   render();
 }
 
-// ===== alarm =====
+// ===== alarm (sound is always on now; no mute) =====
 function ensureAudio() {
   if (!audioCtx) {
     const Ctor = window.AudioContext || window.webkitAudioContext;
@@ -174,8 +202,6 @@ function ensureAudio() {
 function beepOnce() {
   const ctx = ensureAudio();
   const now = ctx.currentTime;
-
-  // two-tone chime — short rising bell
   const tones = [
     { freq: 880,  start: 0,    dur: 0.18 },
     { freq: 1175, start: 0.20, dur: 0.22 }
@@ -214,7 +240,6 @@ timeView.addEventListener('keydown', (e) => {
   }
 });
 
-// numeric-only and auto-advance for time inputs
 inputList.forEach((inp, idx) => {
   inp.addEventListener('focus', () => inp.select());
   inp.addEventListener('input', () => {
@@ -246,7 +271,6 @@ inputList.forEach((inp, idx) => {
   });
 });
 
-// commit edit when focus leaves the edit area entirely
 timeEdit.addEventListener('focusout', () => {
   setTimeout(() => {
     if (editMode && !timeEdit.contains(document.activeElement)) {
@@ -270,13 +294,6 @@ resetBtn.addEventListener('click', () => {
   reset();
 });
 
-muteBtn.addEventListener('click', () => {
-  isMuted = !isMuted;
-  if (isMuted) stopAlarm();
-  else if (isFinished) playAlarm();
-  render();
-});
-
 fullscreenBtn.addEventListener('click', async () => {
   if (window.electronAPI) {
     await window.electronAPI.toggleFullscreen();
@@ -293,7 +310,7 @@ if (window.electronAPI?.onFullscreenChanged) {
   });
 }
 
-// global keyboard shortcuts
+// global keyboard shortcuts (no longer includes M for mute)
 document.addEventListener('keydown', (e) => {
   if (editMode) return;
   const tag = (e.target?.tagName || '').toLowerCase();
@@ -309,20 +326,120 @@ document.addEventListener('keydown', (e) => {
   } else if (e.key === 'f' || e.key === 'F') {
     e.preventDefault();
     fullscreenBtn.click();
-  } else if (e.key === 'm' || e.key === 'M') {
-    e.preventDefault();
-    muteBtn.click();
   } else if (e.key === 'Escape') {
-    if (isFinished) {
-      clearFinished();
-    }
+    if (isFinished) clearFinished();
   } else if (e.key === 'Enter') {
     e.preventDefault();
     enterEditMode();
   }
 });
 
-// init icons
+// ===== queue =====
+function buildQueue() {
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < QUEUE_LENGTH; i++) {
+    const row = document.createElement('li');
+    row.className = 'queue-row';
+    row.dataset.index = String(i);
+    row.innerHTML = `
+      <span class="q-index">${i + 1}.</span>
+      <input type="text" class="q-h" inputmode="numeric" maxlength="2" placeholder="00" aria-label="Queue ${i+1} hours">
+      <span class="q-colon">:</span>
+      <input type="text" class="q-m" inputmode="numeric" maxlength="2" placeholder="00" aria-label="Queue ${i+1} minutes">
+      <span class="q-colon">:</span>
+      <input type="text" class="q-s" inputmode="numeric" maxlength="2" placeholder="00" aria-label="Queue ${i+1} seconds">
+      <button class="q-play" aria-label="Run timer ${i+1}">${ICONS.play}</button>
+    `;
+    const h = row.querySelector('.q-h');
+    const m = row.querySelector('.q-m');
+    const s = row.querySelector('.q-s');
+    const play = row.querySelector('.q-play');
+    const fields = [h, m, s];
+
+    // numeric-only + auto-advance, same UX as main edit mode
+    fields.forEach((inp, idx) => {
+      inp.addEventListener('focus', () => inp.select());
+      inp.addEventListener('input', () => {
+        inp.value = inp.value.replace(/\D/g, '').slice(0, 2);
+        // typing in a completed row re-activates it
+        if (row.classList.contains('completed')) {
+          row.classList.remove('completed');
+        }
+        if (inp.value.length === 2 && idx < fields.length - 1) {
+          fields[idx + 1].focus();
+          fields[idx + 1].select();
+        }
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          inp.blur();
+          startQueueRow(i);
+        } else if (e.key === 'Backspace' && inp.value === '' && idx > 0) {
+          fields[idx - 1].focus();
+        } else if (e.key === 'ArrowRight' && inp.selectionStart === inp.value.length && idx < fields.length - 1) {
+          fields[idx + 1].focus();
+          fields[idx + 1].select();
+        } else if (e.key === 'ArrowLeft' && inp.selectionStart === 0 && idx > 0) {
+          fields[idx - 1].focus();
+          fields[idx - 1].select();
+        }
+      });
+    });
+
+    play.addEventListener('click', () => startQueueRow(i));
+
+    queueRows.push({ row, h, m, s, play, completed: false });
+    frag.appendChild(row);
+  }
+  queueList.appendChild(frag);
+}
+
+function readQueueRowSeconds(idx) {
+  const r = queueRows[idx];
+  if (!r) return 0;
+  const h = parseInt(r.h.value, 10) || 0;
+  const m = parseInt(r.m.value, 10) || 0;
+  const s = parseInt(r.s.value, 10) || 0;
+  return Math.min(99 * 3600 + 59 * 60 + 59, h * 3600 + m * 60 + s);
+}
+
+function setActiveQueueIndex(idx) {
+  queueRows.forEach((r, i) => r.row.classList.toggle('active', i === idx));
+  activeQueueIdx = idx;
+}
+
+function markActiveQueueComplete() {
+  if (activeQueueIdx < 0) return;
+  const r = queueRows[activeQueueIdx];
+  if (r) {
+    r.completed = true;
+    r.row.classList.add('completed');
+    r.row.classList.remove('active');
+  }
+  activeQueueIdx = -1;
+}
+
+function startQueueRow(idx) {
+  const total = readQueueRowSeconds(idx);
+  if (total <= 0) return;
+
+  // If the row was previously marked complete, un-complete it (user is re-running it)
+  queueRows[idx].row.classList.remove('completed');
+  queueRows[idx].completed = false;
+
+  // Hand the duration to the main timer state and start
+  if (editMode) exitEditMode(false);
+  stopTicker();
+  clearFinished();
+  totalSeconds = total;
+  remainingMs = total * 1000;
+  setActiveQueueIndex(idx);
+  start();
+}
+
+// init icons + queue + first render
 fullscreenBtn.innerHTML = ICONS.fullscreen;
 resetBtn.innerHTML = ICONS.reset;
+buildQueue();
 render();

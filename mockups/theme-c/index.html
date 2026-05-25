@@ -2,51 +2,44 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';">
-  <title>Timer</title>
+  <title>Mockup C — Warm Minimal</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main class="timer-card">
     <div class="drag-region"></div>
-
     <aside class="queue-panel" aria-label="Timer queue">
       <h2 class="queue-title">Queue</h2>
       <ol class="queue-list" id="queue-list"></ol>
     </aside>
-
     <section class="timer-main">
       <div class="top-bar">
         <button class="icon-btn" id="fullscreen-btn" title="Full screen (F)" aria-label="Full screen"></button>
       </div>
-
       <div class="timer-display">
         <svg class="progress-ring" viewBox="0 0 200 200" aria-hidden="true">
           <circle class="ring-bg" cx="100" cy="100" r="92"></circle>
           <circle class="ring-fg" cx="100" cy="100" r="92" id="progress"></circle>
         </svg>
-
         <div class="time-area">
           <div class="time-view" id="time-view" tabindex="0" role="button" aria-label="Set timer duration">
             <span id="time-content">5:00</span>
           </div>
           <div class="time-edit" id="time-edit" hidden>
-            <input type="text" id="hours" inputmode="numeric" maxlength="2" value="00" aria-label="Hours">
+            <input type="text" id="hours" inputmode="numeric" maxlength="2" value="00">
             <span class="time-colon">:</span>
-            <input type="text" id="minutes" inputmode="numeric" maxlength="2" value="05" aria-label="Minutes">
+            <input type="text" id="minutes" inputmode="numeric" maxlength="2" value="05">
             <span class="time-colon">:</span>
-            <input type="text" id="seconds" inputmode="numeric" maxlength="2" value="00" aria-label="Seconds">
+            <input type="text" id="seconds" inputmode="numeric" maxlength="2" value="00">
           </div>
         </div>
       </div>
-
       <div class="controls">
         <button class="control-btn" id="start-pause-btn" title="Start / Pause (Space)" aria-label="Start or pause"></button>
         <button class="control-btn" id="reset-btn" title="Reset (R)" aria-label="Reset"></button>
       </div>
     </section>
   </main>
-
-  <script src="renderer.js"></script>
+  <script src="../../renderer.js"></script>
 </body>
 </html>

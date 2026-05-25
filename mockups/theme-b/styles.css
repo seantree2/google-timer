@@ -1,0 +1,217 @@
+/* Theme B — Dark Pro: charcoal background, electric blue accent, premium typography */
+
+:root {
+  /* idle / running */
+  --bg: #15171C;
+  --ring-bg: rgba(255, 255, 255, 0.06);
+  --ring-fg: #4F8CFF;
+  --btn-bg: rgba(79, 140, 255, 0.14);
+  --btn-bg-hover: rgba(79, 140, 255, 0.22);
+  --btn-bg-active: rgba(79, 140, 255, 0.30);
+  --icon: #4F8CFF;
+  --icon-muted: #7B8290;
+  --text: #F2F4F8;
+  --text-muted: #8C96A6;
+  --panel-bg: rgba(255, 255, 255, 0.03);
+  --panel-border: rgba(255, 255, 255, 0.06);
+  --queue-input-bg: rgba(255, 255, 255, 0.05);
+  --queue-input-focus: rgba(79, 140, 255, 0.18);
+}
+
+.timer-card.paused {
+  --ring-fg: #FFC857;
+  --btn-bg: rgba(255, 200, 87, 0.14);
+  --btn-bg-hover: rgba(255, 200, 87, 0.22);
+  --btn-bg-active: rgba(255, 200, 87, 0.30);
+  --icon: #FFC857;
+  --queue-input-focus: rgba(255, 200, 87, 0.18);
+}
+
+.timer-card.finished {
+  --ring-fg: #FF6B6B;
+  --btn-bg: rgba(255, 107, 107, 0.14);
+  --btn-bg-hover: rgba(255, 107, 107, 0.22);
+  --btn-bg-active: rgba(255, 107, 107, 0.30);
+  --icon: #FF6B6B;
+  --queue-input-focus: rgba(255, 107, 107, 0.18);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+}
+
+[hidden] { display: none !important; }
+
+.timer-card {
+  position: relative; width: 100vw; height: 100vh; background: var(--bg);
+  display: flex; flex-direction: row;
+  transition: background-color 200ms ease;
+}
+
+.timer-main {
+  flex: 1; display: flex; flex-direction: column;
+  padding: clamp(24px, 4vmin, 48px);
+  position: relative; min-width: 0;
+}
+
+.drag-region {
+  position: absolute; top: 0; left: 0; right: 0; height: 36px;
+  -webkit-app-region: drag;
+}
+
+/* queue */
+.queue-panel {
+  width: clamp(240px, 26vw, 340px);
+  display: flex; flex-direction: column;
+  padding: clamp(28px, 5vmin, 44px) clamp(18px, 2.5vmin, 26px) clamp(20px, 3vmin, 32px);
+  background: var(--panel-bg);
+  border-right: 1px solid var(--panel-border);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.queue-title {
+  font-size: 11px; font-weight: 500; color: var(--text-muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  margin-bottom: 18px; padding-left: 6px;
+}
+
+.queue-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+
+.queue-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 12px; border-radius: 10px;
+  font-size: 15px; font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  transition: background-color 120ms ease, opacity 200ms ease;
+}
+
+.queue-row:hover { background: rgba(255, 255, 255, 0.04); }
+.queue-row.active { background: rgba(79, 140, 255, 0.10); }
+.timer-card.paused .queue-row.active { background: rgba(255, 200, 87, 0.10); }
+.timer-card.finished .queue-row.active { background: rgba(255, 107, 107, 0.10); }
+.queue-row.completed { opacity: 0.35; text-decoration: line-through; }
+
+.q-index { width: 1.8em; color: var(--text-muted); font-size: 0.85em; text-align: right; }
+
+.queue-row input {
+  width: 1.9em; text-align: center;
+  background: var(--queue-input-bg);
+  border: none; border-radius: 5px; padding: 4px 0;
+  font: inherit; color: inherit;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  -webkit-user-select: text; user-select: text;
+}
+.queue-row input:focus { background: var(--queue-input-focus); }
+
+.queue-row .q-colon { color: var(--text-muted); margin: 0 1px; }
+
+.q-play {
+  margin-left: auto; background: var(--btn-bg); border: none;
+  width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+  color: var(--icon);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 120ms ease, color 200ms ease;
+}
+.q-play:hover { background: var(--btn-bg-hover); }
+.q-play:active { background: var(--btn-bg-active); }
+.q-play svg { width: 13px; height: 13px; }
+
+/* top bar */
+.top-bar {
+  position: absolute; top: clamp(12px, 2.5vmin, 22px); right: clamp(12px, 2.5vmin, 22px);
+  display: flex; gap: 4px; z-index: 2;
+}
+.icon-btn {
+  background: transparent; border: none;
+  width: clamp(36px, 5vmin, 56px); height: clamp(36px, 5vmin, 56px);
+  border-radius: 50%; cursor: pointer; color: var(--icon-muted);
+  display: flex; align-items: center; justify-content: center;
+  transition: background-color 120ms ease, color 200ms ease;
+  -webkit-app-region: no-drag;
+}
+.icon-btn:hover { background: rgba(255, 255, 255, 0.06); }
+.icon-btn:active { background: rgba(255, 255, 255, 0.10); }
+.icon-btn svg { width: 60%; height: 60%; }
+
+/* main display */
+.timer-display {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  position: relative; min-height: 0;
+}
+
+.progress-ring {
+  width: min(72vh, 72vw); height: min(72vh, 72vw);
+  transform: scaleX(-1) rotate(-90deg);
+  display: block;
+}
+
+.ring-bg, .ring-fg { fill: none; stroke-width: 3; }
+.ring-bg { stroke: var(--ring-bg); transition: stroke 200ms ease; }
+.ring-fg {
+  stroke: var(--ring-fg); stroke-linecap: round;
+  transition: stroke-dashoffset 120ms linear, stroke 200ms ease;
+  filter: drop-shadow(0 0 8px rgba(79, 140, 255, 0.25));
+}
+.timer-card.paused .ring-fg { filter: drop-shadow(0 0 8px rgba(255, 200, 87, 0.25)); }
+.timer-card.finished .ring-fg { filter: drop-shadow(0 0 12px rgba(255, 107, 107, 0.35)); }
+
+/* time text */
+.time-area {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 200;
+  font-size: min(16vh, 16vw);
+  line-height: 1; letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.time-view {
+  cursor: pointer; padding: 0.1em 0.2em; border-radius: 0.15em; outline: none;
+  transition: background-color 120ms ease;
+}
+.time-view:hover, .time-view:focus-visible { background: rgba(255, 255, 255, 0.04); }
+.timer-card.timer-running .time-view,
+.timer-card.finished .time-view { cursor: default; }
+.timer-card.timer-running .time-view:hover,
+.timer-card.finished .time-view:hover { background: transparent; }
+
+.time-edit { display: flex; align-items: baseline; letter-spacing: -0.04em; }
+.time-edit input {
+  width: 1.5em; text-align: center;
+  background: transparent; border: none; outline: none;
+  font: inherit; font-variant-numeric: tabular-nums;
+  color: inherit; padding: 0; border-radius: 0.1em;
+  caret-color: var(--ring-fg);
+  -webkit-user-select: text; user-select: text;
+}
+.time-edit input:focus { background: rgba(79, 140, 255, 0.18); }
+.timer-card.paused .time-edit input:focus { background: rgba(255, 200, 87, 0.18); }
+.time-colon { margin: 0 0.02em; color: var(--text-muted); }
+
+/* bottom controls */
+.controls {
+  display: flex; justify-content: center; gap: clamp(10px, 2.5vmin, 24px);
+  padding: clamp(12px, 2.5vmin, 28px) 0;
+}
+.control-btn {
+  background: var(--btn-bg); border: none;
+  height: clamp(48px, 7.5vmin, 72px); flex: 1;
+  max-width: clamp(180px, 32vmin, 380px); min-width: 130px;
+  border-radius: 9999px; cursor: pointer; color: var(--icon);
+  display: flex; align-items: center; justify-content: center;
+  transition: background-color 120ms ease, color 200ms ease, transform 80ms ease;
+}
+.control-btn:hover { background: var(--btn-bg-hover); }
+.control-btn:active { background: var(--btn-bg-active); transform: scale(0.98); }
+.control-btn svg { width: clamp(22px, 3.2vmin, 36px); height: clamp(22px, 3.2vmin, 36px); }
