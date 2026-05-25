@@ -307,6 +307,9 @@ function confirmRow(row) {
   row.m_in.value = pad2(Math.floor((total % 3600) / 60));
   row.s_in.value = pad2(total % 60);
   setRowState(row, 'confirmed');
+  // If this row is the one featured in the main view, refresh it so the
+  // freshly-set duration shows immediately.
+  if (row.id === activeId) renderMain();
 }
 
 function startRow(row) {
@@ -376,25 +379,25 @@ function tick() {
   renderMain();
 }
 
-// Anywhere-click dismiss while the alarm is playing. After dismissing, advance
-// the active slot to the next confirmed row so the main view immediately shows
-// the next timer ready to play.
+// Anywhere-click dismiss while the alarm is playing. After dismissing, the
+// "next in line" row in the queue becomes the active one — featured in the
+// main view regardless of its state (confirmed → shows its duration ready to
+// play; unconfirmed → shows 0:00 until the user types and confirms it).
 function dismissAlarmIfActive() {
   if (isAlarmPlaying()) {
     stopAlarm();
-    advanceToNextConfirmed();
+    advanceToNextInLine();
   }
 }
 
-// Move activeId to the next confirmed row after the current one. If there are
-// no later confirmed rows, clear activeId (main view goes blank, user must
-// click play on whichever row they want next).
-function advanceToNextConfirmed() {
+// Move activeId to the next non-completed row after the current one. If
+// there are none, clear activeId.
+function advanceToNextInLine() {
   if (activeId === null) return;
   const currentIdx = queue.findIndex(r => r.id === activeId);
   let nextRow = null;
   for (let i = currentIdx + 1; i < queue.length; i++) {
-    if (queue[i].state === 'confirmed') {
+    if (queue[i].state !== 'completed') {
       nextRow = queue[i];
       break;
     }
