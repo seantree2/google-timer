@@ -132,20 +132,22 @@ function updateAddButton() {
   queueAddBtn.disabled = queue.length >= QUEUE_MAX;
 }
 
-function buildRow(initial = { h: 0, m: 0, s: 0 }) {
+function buildRow() {
   if (queue.length >= QUEUE_MAX) return null;
   const id = ++nextId;
   const el = document.createElement('li');
   el.className = 'queue-row state-unconfirmed';
   el.dataset.id = String(id);
+  // Inputs start empty with "0" / "00" as PLACEHOLDERS (visual-only). Clicking
+  // positions the caret in an empty field; typing fills it.
   el.innerHTML = `
     <span class="q-index"></span>
     <span class="q-time-group">
-      <input type="text" class="q-h" inputmode="numeric" maxlength="1" value="${initial.h}" aria-label="Hours">
+      <input type="text" class="q-h" inputmode="numeric" maxlength="1" value="" placeholder="0" aria-label="Hours">
       <span class="q-colon">:</span>
-      <input type="text" class="q-m" inputmode="numeric" maxlength="2" value="${pad2(initial.m)}" aria-label="Minutes">
+      <input type="text" class="q-m" inputmode="numeric" maxlength="2" value="" placeholder="00" aria-label="Minutes">
       <span class="q-colon">:</span>
-      <input type="text" class="q-s" inputmode="numeric" maxlength="2" value="${pad2(initial.s)}" aria-label="Seconds">
+      <input type="text" class="q-s" inputmode="numeric" maxlength="2" value="" placeholder="00" aria-label="Seconds">
     </span>
     <button class="q-action" type="button"></button>
   `;
@@ -165,13 +167,8 @@ function buildRow(initial = { h: 0, m: 0, s: 0 }) {
 function wireRow(row) {
   const fields = [row.h_in, row.m_in, row.s_in];
   fields.forEach((inp, idx) => {
-    // If the field still shows the default 0/00, select all on focus so the user
-    // can just start typing and the zeros are displaced. For any non-zero value
-    // the user has already typed in, clicking just positions the caret (per spec).
-    inp.addEventListener('focus', () => {
-      if (/^0+$/.test(inp.value)) inp.select();
-    });
-    // Double-click always selects all regardless of current value.
+    // Single-click leaves the caret wherever the user clicked.
+    // Double-click selects all the digits.
     inp.addEventListener('dblclick', () => inp.select());
     inp.addEventListener('input', () => {
       const maxLen = inp.classList.contains('q-h') ? 1 : 2;
