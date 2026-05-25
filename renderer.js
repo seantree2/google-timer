@@ -376,9 +376,31 @@ function tick() {
   renderMain();
 }
 
-// Anywhere-click dismiss while the alarm is playing
+// Anywhere-click dismiss while the alarm is playing. After dismissing, advance
+// the active slot to the next confirmed row so the main view immediately shows
+// the next timer ready to play.
 function dismissAlarmIfActive() {
-  if (isAlarmPlaying()) stopAlarm();
+  if (isAlarmPlaying()) {
+    stopAlarm();
+    advanceToNextConfirmed();
+  }
+}
+
+// Move activeId to the next confirmed row after the current one. If there are
+// no later confirmed rows, clear activeId (main view goes blank, user must
+// click play on whichever row they want next).
+function advanceToNextConfirmed() {
+  if (activeId === null) return;
+  const currentIdx = queue.findIndex(r => r.id === activeId);
+  let nextRow = null;
+  for (let i = currentIdx + 1; i < queue.length; i++) {
+    if (queue[i].state === 'confirmed') {
+      nextRow = queue[i];
+      break;
+    }
+  }
+  activeId = nextRow ? nextRow.id : null;
+  renderMain();
 }
 
 function deleteRow(rowId) {
