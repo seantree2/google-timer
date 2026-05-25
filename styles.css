@@ -190,12 +190,22 @@ html, body {
 .q-action:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
 .q-action svg { width: 13px; height: 13px; }
 
-/* Completed-row's action button: keep it the original Strava orange — don't follow
-   the timer-card's --accent var which turns red when the timer finishes. */
-.queue-row.state-completed .q-action {
+/* The queue rows' action buttons should always look the same regardless of the
+   timer-card's accent state — they're the user's controls, not status indicators.
+   Keep them in Strava orange even when the card shifts to red (finished) or yellow
+   (paused) palettes. */
+.timer-card .q-action,
+.timer-card.paused .q-action,
+.timer-card.finished .q-action,
+.timer-card.alarming .q-action {
   background: #FC5200;
 }
-.queue-row.state-completed .q-action:hover { background: #FC5200; }
+.timer-card .q-action:hover,
+.timer-card.paused .q-action:hover,
+.timer-card.finished .q-action:hover,
+.timer-card.alarming .q-action:hover {
+  background: #DA4500;
+}
 
 /* "Add timer" button at bottom of queue */
 .q-add {
