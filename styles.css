@@ -397,6 +397,9 @@ html, body {
 
 /* When the alarm is going off, the whole timer area is a dismiss target */
 .timer-card.alarming .timer-main { cursor: pointer; }
+/* Hide the play button during the alarm — it's disabled anyway, and otherwise
+   it covers the 'TAP TO DISMISS' hint. Reappears as soon as the alarm clears. */
+.timer-card.alarming .main-controls { visibility: hidden; }
 .timer-card.alarming .timer-display::after {
   content: 'Tap to dismiss';
   position: absolute;

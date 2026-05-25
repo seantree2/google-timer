@@ -248,16 +248,15 @@ function startRow(row) {
   if (row.totalSec <= 0) return;
   // Starting any row also dismisses an alarm currently going off
   stopAlarm();
-  // If a different row is currently the active one, ABANDON it — it loses its
-  // progress, goes back to 'confirmed' (no highlight). Only one row can be
-  // selected/highlighted at any time.
+  // If a different row is currently the active one, mark it as COMPLETED
+  // (crossed out, like an expired timer). Only one row highlighted at a time;
+  // earlier timers stay visibly "done" so the user can see what's been run.
   if (activeId !== null && activeId !== row.id) {
     const prev = getActive();
     if (prev) {
       if (tickerId) clearInterval(tickerId);
       tickerId = null;
-      prev.remainingMs = prev.totalSec * 1000;
-      setRowState(prev, 'confirmed');
+      setRowState(prev, 'completed');
     }
   }
   activeId = row.id;
