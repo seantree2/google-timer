@@ -233,11 +233,12 @@ html, body {
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.32);
 }
 
-/* While a timer is RUNNING, the play buttons on OTHER confirmed rows are
-   disabled so the user can't accidentally interrupt the active timer.
-   The active row's pause button and unconfirmed rows' tick buttons remain
-   clickable. */
-.queue-list:has(.queue-row.state-running) .queue-row.state-confirmed .q-action {
+/* While a timer is ACTIVE (running OR paused), the play buttons on OTHER
+   confirmed rows are disabled so the user can't accidentally interrupt the
+   selected timer. The active row's pause/resume button stays clickable,
+   and unconfirmed rows' tick buttons remain clickable too. */
+.queue-list:has(.queue-row.state-running) .queue-row.state-confirmed .q-action,
+.queue-list:has(.queue-row.state-paused)  .queue-row.state-confirmed .q-action {
   pointer-events: none;
   opacity: 0.35;
 }
