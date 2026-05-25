@@ -190,6 +190,17 @@ html, body {
 .q-action:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
 .q-action svg { width: 13px; height: 13px; }
 
+/* While the row is unconfirmed (tick state), the action button is green so it
+   clearly invites the user to confirm. After confirm it returns to Strava orange. */
+.queue-row.state-unconfirmed .q-action {
+  background: #16A34A;            /* vivid green */
+}
+.queue-row.state-unconfirmed .q-action:hover {
+  background: #11823B;
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.32);
+}
+.queue-row.state-unconfirmed .q-action:active { background: #0E6E32; }
+
 /* "Add timer" button at bottom of queue */
 .q-add {
   display: flex; align-items: center; justify-content: center;
