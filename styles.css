@@ -232,14 +232,16 @@ html, body {
   background: #128238;
 }
 
-/* Circular "+" button at the bottom of the queue */
+/* Circular "+" button at the bottom of the queue. Always Strava orange —
+   doesn't follow the timer-card's state palette (yellow when paused, red
+   when finished). It's a queue control, not a status indicator. */
 .q-add {
   align-self: center;
   flex-shrink: 0;
   width: 38px; height: 38px;
   border: none;
   border-radius: 50%;
-  background: var(--accent);
+  background: #FC5200;
   color: white;
   font: inherit;
   font-size: 24px;
@@ -247,13 +249,21 @@ html, body {
   line-height: 1;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  padding: 0 0 2px 0;        /* tiny optical adjustment to centre the '+' glyph */
+  padding: 0 0 2px 0;
   transition: background-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
   box-shadow: 0 2px 6px rgba(252, 82, 0, 0.22);
 }
-.q-add:hover { background: var(--accent-dark); transform: scale(1.06); box-shadow: 0 4px 12px rgba(252, 82, 0, 0.30); }
+.q-add:hover { background: #DA4500; transform: scale(1.06); box-shadow: 0 4px 12px rgba(252, 82, 0, 0.30); }
 .q-add:active { transform: scale(0.96); }
 .q-add:disabled { opacity: 0.30; cursor: default; transform: none; box-shadow: none; }
+
+/* Lock the colour against every card state. */
+.timer-card.paused .q-add,
+.timer-card.finished .q-add,
+.timer-card.alarming .q-add { background: #FC5200; }
+.timer-card.paused .q-add:hover,
+.timer-card.finished .q-add:hover,
+.timer-card.alarming .q-add:hover { background: #DA4500; }
 
 /* --- main timer (right, floating card) --- */
 .timer-main {
