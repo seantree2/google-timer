@@ -2,20 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Mockup B — Editorial</title>
+  <title>Mockup B — Brutalist Tech</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main class="timer-card">
+  <main class="timer-card size-m">
     <div class="drag-region"></div>
     <aside class="queue-panel" aria-label="Timer queue">
-      <h2 class="queue-title">Queue</h2>
+      <h2 class="queue-title">// QUEUE</h2>
       <ol class="queue-list" id="queue-list"></ol>
     </aside>
     <section class="timer-main">
       <div class="top-bar">
+        <div class="size-toggle" role="group" aria-label="Display size">
+          <button class="size-btn" data-size="s" aria-label="Small display">S</button>
+          <button class="size-btn is-active" data-size="m" aria-label="Medium display">M</button>
+          <button class="size-btn" data-size="l" aria-label="Large display">L</button>
+        </div>
         <button class="icon-btn" id="fullscreen-btn" title="Full screen (F)" aria-label="Full screen"></button>
       </div>
+
+      <div class="status-line">
+        <span class="status-label">MODE</span>
+        <span class="status-value" id="status-mode">READY</span>
+      </div>
+
       <div class="timer-display">
         <svg class="progress-ring" viewBox="0 0 200 200" aria-hidden="true">
           <circle class="ring-bg" cx="100" cy="100" r="92"></circle>
@@ -34,12 +45,38 @@
           </div>
         </div>
       </div>
+
       <div class="controls">
         <button class="control-btn" id="start-pause-btn" title="Start / Pause (Space)" aria-label="Start or pause"></button>
         <button class="control-btn" id="reset-btn" title="Reset (R)" aria-label="Reset"></button>
       </div>
     </section>
   </main>
+
   <script src="../../renderer.js"></script>
+  <script>
+    // Size toggle — switch between three display sizes (S/M/L)
+    const card = document.querySelector('.timer-card');
+    document.querySelectorAll('.size-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        card.classList.remove('size-s', 'size-m', 'size-l');
+        card.classList.add('size-' + btn.dataset.size);
+      });
+    });
+
+    // Status line reflects timer state
+    const statusValue = document.getElementById('status-mode');
+    function updateStatus() {
+      const c = card.classList;
+      if (c.contains('finished')) statusValue.textContent = '-- DONE --';
+      else if (c.contains('paused')) statusValue.textContent = '// HOLD';
+      else if (c.contains('timer-running')) statusValue.textContent = '>> RUN';
+      else statusValue.textContent = 'READY';
+    }
+    new MutationObserver(updateStatus).observe(card, { attributes: true, attributeFilter: ['class'] });
+    updateStatus();
+  </script>
 </body>
 </html>

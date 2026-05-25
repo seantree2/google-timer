@@ -74,6 +74,13 @@ html, body {
   display: flex; gap: 4px; z-index: 10;
 }
 
+.icon-btn--left {
+  position: absolute;
+  top: clamp(16px, 3vmin, 28px);
+  left: clamp(16px, 3vmin, 28px);
+  z-index: 10;
+}
+
 .icon-btn {
   background: transparent; border: none;
   width: clamp(40px, 5.5vmin, 60px); height: clamp(40px, 5.5vmin, 60px);
