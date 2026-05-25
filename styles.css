@@ -77,43 +77,29 @@ html, body {
 
 /* ---------- queue panel ---------- */
 .queue-panel {
-  width: clamp(220px, 26vw, 320px);
+  width: clamp(240px, 28vw, 360px);
   display: flex;
   flex-direction: column;
-  padding: clamp(20px, 4vmin, 36px) clamp(14px, 2vmin, 22px) clamp(16px, 3vmin, 28px);
-  background: rgba(255, 255, 255, 0.5);
-  border-right: 1px solid rgba(60, 64, 67, 0.08);
+  padding: clamp(20px, 4vmin, 40px) clamp(16px, 2.5vmin, 28px);
+  /* integrated look: no separate white background, no hard border */
+  background: transparent;
   overflow-y: auto;
   overflow-x: hidden;
-  transition: background-color 200ms ease, border-color 200ms ease;
   -webkit-app-region: no-drag;
 }
 
-.timer-card.paused .queue-panel {
-  background: rgba(255, 255, 255, 0.55);
-  border-right-color: rgba(146, 110, 0, 0.15);
-}
-
-.timer-card.finished .queue-panel {
-  background: rgba(255, 255, 255, 0.55);
-  border-right-color: rgba(179, 20, 18, 0.15);
-}
-
 .queue-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-muted);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-  padding-left: 4px;
+  /* heading removed visually for integration — rows imply queue via numbering */
+  display: none;
 }
 
 .queue-list {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  /* fill the full vertical space rather than leaving the bottom half empty */
+  flex: 1;
+  justify-content: space-around;
   margin: 0;
   padding: 0;
 }
@@ -173,6 +159,10 @@ html, body {
   outline: none;
   -webkit-user-select: text;
   user-select: text;
+}
+
+.queue-row .q-h {
+  width: 1.1em;  /* narrower because hours is only 1 digit (max 9) */
 }
 
 .queue-row input:focus {
@@ -350,6 +340,10 @@ html, body {
   caret-color: var(--ring-fg);
   -webkit-user-select: text;
   user-select: text;
+}
+
+.time-edit input#hours {
+  width: 0.85em;  /* single-digit hours fits in less space */
 }
 
 .time-edit input:focus {

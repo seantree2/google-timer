@@ -65,24 +65,23 @@ html, body {
   -webkit-app-region: drag;
 }
 
-/* queue */
+/* queue — integrated into the same canvas, no separate background */
 .queue-panel {
-  width: clamp(240px, 26vw, 340px);
+  width: clamp(240px, 28vw, 360px);
   display: flex; flex-direction: column;
-  padding: clamp(28px, 5vmin, 44px) clamp(18px, 2.5vmin, 26px) clamp(20px, 3vmin, 32px);
-  background: var(--panel-bg);
-  border-right: 1px solid var(--panel-border);
+  padding: clamp(28px, 5vmin, 44px) clamp(18px, 2.5vmin, 26px);
+  background: transparent;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-.queue-title {
-  font-size: 11px; font-weight: 500; color: var(--text-muted);
-  letter-spacing: 0.18em; text-transform: uppercase;
-  margin-bottom: 18px; padding-left: 6px;
-}
+.queue-title { display: none; }
 
-.queue-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.queue-list {
+  list-style: none; display: flex; flex-direction: column;
+  flex: 1;                       /* fill all vertical space */
+  justify-content: space-around; /* spread rows evenly */
+}
 
 .queue-row {
   display: flex; align-items: center; gap: 6px;
@@ -110,6 +109,7 @@ html, body {
   outline: none;
   -webkit-user-select: text; user-select: text;
 }
+.queue-row .q-h { width: 1.1em; }
 .queue-row input:focus { background: var(--queue-input-focus); }
 
 .queue-row .q-colon { color: var(--text-muted); margin: 0 1px; }
@@ -195,6 +195,7 @@ html, body {
   caret-color: var(--ring-fg);
   -webkit-user-select: text; user-select: text;
 }
+.time-edit input#hours { width: 0.85em; }
 .time-edit input:focus { background: rgba(79, 140, 255, 0.18); }
 .timer-card.paused .time-edit input:focus { background: rgba(255, 200, 87, 0.18); }
 .time-colon { margin: 0 0.02em; color: var(--text-muted); }

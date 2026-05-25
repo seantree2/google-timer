@@ -164,7 +164,7 @@ function enterEditMode() {
   clearFinished();
 
   const totalSec = Math.max(0, Math.ceil(remainingMs / 1000));
-  inputs.h.value = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+  inputs.h.value = String(Math.min(9, Math.floor(totalSec / 3600)));
   inputs.m.value = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
   inputs.s.value = String(totalSec % 60).padStart(2, '0');
 
@@ -178,10 +178,10 @@ function enterEditMode() {
 }
 
 function commitEdit() {
-  const h = parseInt(inputs.h.value, 10) || 0;
+  const h = Math.min(9, parseInt(inputs.h.value, 10) || 0);
   const m = parseInt(inputs.m.value, 10) || 0;
   const s = parseInt(inputs.s.value, 10) || 0;
-  totalSeconds = Math.min(99 * 3600 + 59 * 60 + 59, h * 3600 + m * 60 + s);
+  totalSeconds = Math.min(9 * 3600 + 59 * 60 + 59, h * 3600 + m * 60 + s);
   remainingMs = totalSeconds * 1000;
   // Setting a new total means we've made no progress yet — reset paused state too.
   isPaused = false;
@@ -249,9 +249,13 @@ timeView.addEventListener('keydown', (e) => {
 
 inputList.forEach((inp, idx) => {
   inp.addEventListener('focus', () => inp.select());
+  // Re-select on every click (including second click of a double-click) so the user can
+  // always type-to-overwrite without manually selecting.
+  inp.addEventListener('click', () => inp.select());
   inp.addEventListener('input', () => {
-    inp.value = inp.value.replace(/\D/g, '').slice(0, 2);
-    if (inp.value.length === 2 && idx < inputList.length - 1) {
+    const maxLen = inp.id === 'hours' ? 1 : 2;
+    inp.value = inp.value.replace(/\D/g, '').slice(0, maxLen);
+    if (inp.value.length === maxLen && idx < inputList.length - 1) {
       inputList[idx + 1].focus();
       inputList[idx + 1].select();
     }
@@ -350,7 +354,7 @@ function buildQueue() {
     row.dataset.index = String(i);
     row.innerHTML = `
       <span class="q-index">${i + 1}.</span>
-      <input type="text" class="q-h" inputmode="numeric" maxlength="2" placeholder="00" aria-label="Queue ${i+1} hours">
+      <input type="text" class="q-h" inputmode="numeric" maxlength="1" placeholder="0" aria-label="Queue ${i+1} hours">
       <span class="q-colon">:</span>
       <input type="text" class="q-m" inputmode="numeric" maxlength="2" placeholder="00" aria-label="Queue ${i+1} minutes">
       <span class="q-colon">:</span>
@@ -365,14 +369,17 @@ function buildQueue() {
 
     // numeric-only + auto-advance, same UX as main edit mode
     fields.forEach((inp, idx) => {
+      const maxLen = inp.classList.contains('q-h') ? 1 : 2;
       inp.addEventListener('focus', () => inp.select());
+      // Re-select on every click so any click (single or second click of a double) lets the user type-to-overwrite.
+      inp.addEventListener('click', () => inp.select());
       inp.addEventListener('input', () => {
-        inp.value = inp.value.replace(/\D/g, '').slice(0, 2);
+        inp.value = inp.value.replace(/\D/g, '').slice(0, maxLen);
         // typing in a completed row re-activates it
         if (row.classList.contains('completed')) {
           row.classList.remove('completed');
         }
-        if (inp.value.length === 2 && idx < fields.length - 1) {
+        if (inp.value.length === maxLen && idx < fields.length - 1) {
           fields[idx + 1].focus();
           fields[idx + 1].select();
         }
@@ -405,10 +412,10 @@ function buildQueue() {
 function readQueueRowSeconds(idx) {
   const r = queueRows[idx];
   if (!r) return 0;
-  const h = parseInt(r.h.value, 10) || 0;
+  const h = Math.min(9, parseInt(r.h.value, 10) || 0);
   const m = parseInt(r.m.value, 10) || 0;
   const s = parseInt(r.s.value, 10) || 0;
-  return Math.min(99 * 3600 + 59 * 60 + 59, h * 3600 + m * 60 + s);
+  return Math.min(9 * 3600 + 59 * 60 + 59, h * 3600 + m * 60 + s);
 }
 
 function setActiveQueueIndex(idx) {
