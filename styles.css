@@ -310,6 +310,28 @@ html, body {
   font-variant-numeric: tabular-nums;
 }
 
+/* When the alarm is going off, the whole timer area is a dismiss target */
+.timer-card.alarming .timer-main { cursor: pointer; }
+.timer-card.alarming .timer-display::after {
+  content: 'Tap to dismiss';
+  position: absolute;
+  bottom: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.7;
+  pointer-events: none;
+  animation: pulse-dismiss 1.4s ease-in-out infinite;
+}
+@keyframes pulse-dismiss {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 0.95; }
+}
+
 /* Right-click context menu */
 .ctx-menu {
   position: fixed;

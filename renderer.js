@@ -207,6 +207,8 @@ function confirmRow(row) {
 
 function startRow(row) {
   if (row.totalSec <= 0) return;
+  // Starting any row also dismisses an alarm currently going off
+  stopAlarm();
   // If another row is currently the active one, pause/clear it first
   if (activeId !== null && activeId !== row.id) {
     const prev = getActive();
@@ -255,8 +257,18 @@ function tick() {
     tickerId = null;
     setRowState(a, 'completed');
     playAlarm();
+    // expose to the main display so click-to-dismiss can target it
+    card.classList.add('alarming');
   }
   renderMain();
+}
+
+// Anywhere-click dismiss while the alarm is playing
+function dismissAlarmIfActive() {
+  if (alarmIntervalId) {
+    stopAlarm();
+    card.classList.remove('alarming');
+  }
 }
 
 function deleteRow(rowId) {
@@ -365,6 +377,8 @@ function playAlarm() {
 function stopAlarm() {
   if (alarmIntervalId) clearInterval(alarmIntervalId);
   alarmIntervalId = null;
+  // Auto-stop also clears the "alarming" visual state on the card
+  card.classList.remove('alarming');
 }
 
 // ===== add-row button =====
@@ -390,6 +404,12 @@ if (window.electronAPI?.onFullscreenChanged) {
 document.addEventListener('keydown', (e) => {
   const tag = (e.target?.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea') return;
+  // If the alarm is firing, ANY of Space/Esc/Enter dismisses it (no other action).
+  if (alarmIntervalId && (e.key === ' ' || e.code === 'Space' || e.key === 'Escape' || e.key === 'Enter')) {
+    e.preventDefault();
+    dismissAlarmIfActive();
+    return;
+  }
   if (e.key === 'f' || e.key === 'F') { e.preventDefault(); fullscreenBtn.click(); }
   else if (e.key === ' ' || e.code === 'Space') {
     // Space = play/pause the active row if there is one
@@ -398,8 +418,13 @@ document.addEventListener('keydown', (e) => {
     if (!a) return;
     if (a.state === 'running') pauseRow(a);
     else if (a.state === 'confirmed' || a.state === 'paused') startRow(a);
-    else if (a.state === 'completed') { stopAlarm(); /* dismiss */ }
   }
+});
+
+// Click anywhere on the main timer area dismisses an active alarm.
+document.querySelector('.timer-main').addEventListener('click', (e) => {
+  if (e.target.closest('.icon-btn, .top-bar')) return;
+  dismissAlarmIfActive();
 });
 
 // ===== init =====
