@@ -13,10 +13,7 @@
     <aside class="queue-panel" aria-label="Timer queue">
       <h2 class="section-title">Queue</h2>
       <ol class="queue-list" id="queue-list"></ol>
-      <button class="q-add" id="q-add" type="button" aria-label="Add a timer">
-        <span class="q-add-icon" aria-hidden="true">+</span>
-        <span class="q-add-label">Add timer</span>
-      </button>
+      <button class="q-add" id="q-add" type="button" aria-label="Add a timer" title="Add timer">+</button>
     </aside>
 
     <section class="timer-main">
@@ -34,6 +31,10 @@
         <div class="time-area">
           <span class="time-text" id="time-content">0:00</span>
         </div>
+      </div>
+
+      <div class="main-controls">
+        <button class="control-btn" id="start-pause-btn" type="button" aria-label="Start or pause"></button>
       </div>
 
       <div class="total-time">

@@ -2,8 +2,8 @@
 const ICONS = {
   play:  '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>',
   pause: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>',
-  // checkmark/tick — used to confirm a freshly-typed time
-  tick:  '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+  // checkmark/tick — thicker stroke style so it reads clearly on the green button
+  tick:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
   fullscreen:     '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>',
   fullscreenExit: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>'
 };
@@ -13,6 +13,7 @@ const card           = document.querySelector('.timer-card');
 const timeContent    = document.getElementById('time-content');
 const progress       = document.getElementById('progress');
 const fullscreenBtn  = document.getElementById('fullscreen-btn');
+const startPauseBtn  = document.getElementById('start-pause-btn');
 const queueList      = document.getElementById('queue-list');
 const queueAddBtn    = document.getElementById('q-add');
 const totalValueEl   = document.getElementById('total-value');
@@ -72,10 +73,29 @@ function renderMain() {
     card.classList.toggle('timer-running', a.state === 'running');
     card.classList.toggle('paused', a.state === 'paused');
     card.classList.toggle('finished', a.state === 'completed');
+
+    // Main play/pause button reflects the active row's state
+    if (a.state === 'running') {
+      startPauseBtn.innerHTML = ICONS.pause;
+      startPauseBtn.disabled = false;
+      startPauseBtn.setAttribute('aria-label', 'Pause');
+    } else if (a.state === 'paused' || a.state === 'confirmed') {
+      startPauseBtn.innerHTML = ICONS.play;
+      startPauseBtn.disabled = false;
+      startPauseBtn.setAttribute('aria-label', 'Start');
+    } else {
+      // completed
+      startPauseBtn.innerHTML = ICONS.play;
+      startPauseBtn.disabled = true;
+      startPauseBtn.setAttribute('aria-label', 'Done');
+    }
   } else {
     timeContent.textContent = '0:00';
     progress.style.strokeDashoffset = CIRCUMFERENCE;
     card.classList.remove('timer-running', 'paused', 'finished');
+    startPauseBtn.innerHTML = ICONS.play;
+    startPauseBtn.disabled = true;
+    startPauseBtn.setAttribute('aria-label', 'No active timer');
   }
   totalValueEl.textContent = formatTotalTime(totalElapsedMs);
 }
@@ -212,10 +232,17 @@ function startRow(row) {
   if (row.totalSec <= 0) return;
   // Starting any row also dismisses an alarm currently going off
   stopAlarm();
-  // If another row is currently the active one, pause/clear it first
+  // If a different row is currently the active one, ABANDON it — it loses its
+  // progress, goes back to 'confirmed' (no highlight). Only one row can be
+  // selected/highlighted at any time.
   if (activeId !== null && activeId !== row.id) {
     const prev = getActive();
-    if (prev && prev.state === 'running') doPauseActive();
+    if (prev) {
+      if (tickerId) clearInterval(tickerId);
+      tickerId = null;
+      prev.remainingMs = prev.totalSec * 1000;
+      setRowState(prev, 'confirmed');
+    }
   }
   activeId = row.id;
   setRowState(row, 'running');
@@ -352,6 +379,14 @@ function stopAlarm() {
   try { alarmAudio.pause(); alarmAudio.currentTime = 0; } catch {}
   card.classList.remove('alarming');
 }
+
+// ===== main play/pause button =====
+startPauseBtn.addEventListener('click', () => {
+  const a = getActive();
+  if (!a) return;
+  if (a.state === 'running') pauseRow(a);
+  else if (a.state === 'paused' || a.state === 'confirmed') startRow(a);
+});
 
 // ===== add-row button =====
 queueAddBtn.addEventListener('click', () => {
