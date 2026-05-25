@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Mockup C — Soft Coral</title>
+  <title>Mockup C — Minimal Focus</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main class="timer-card">
     <div class="drag-region"></div>
-    <aside class="queue-panel" aria-label="Timer queue">
-      <h2 class="queue-title">Queue</h2>
-      <ol class="queue-list" id="queue-list"></ol>
-    </aside>
+
     <section class="timer-main">
       <div class="top-bar">
+        <button class="icon-btn" id="queue-toggle" title="Toggle queue (Q)" aria-label="Toggle queue">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
+        </button>
         <button class="icon-btn" id="fullscreen-btn" title="Full screen (F)" aria-label="Full screen"></button>
       </div>
       <div class="timer-display">
@@ -39,7 +39,29 @@
         <button class="control-btn" id="reset-btn" title="Reset (R)" aria-label="Reset"></button>
       </div>
     </section>
+
+    <aside class="queue-panel" aria-label="Timer queue">
+      <h2 class="queue-title">Queue</h2>
+      <ol class="queue-list" id="queue-list"></ol>
+    </aside>
+    <div class="queue-backdrop"></div>
   </main>
   <script src="../../renderer.js"></script>
+  <script>
+    // Minimal Focus toggle: queue is a slide-in drawer
+    const toggleBtn = document.getElementById('queue-toggle');
+    const queuePanel = document.querySelector('.queue-panel');
+    const backdrop = document.querySelector('.queue-backdrop');
+    function setQueueOpen(open) {
+      document.body.classList.toggle('queue-open', open);
+    }
+    toggleBtn.addEventListener('click', () => setQueueOpen(!document.body.classList.contains('queue-open')));
+    backdrop.addEventListener('click', () => setQueueOpen(false));
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      if (e.key === 'q' || e.key === 'Q') setQueueOpen(!document.body.classList.contains('queue-open'));
+      else if (e.key === 'Escape' && document.body.classList.contains('queue-open')) setQueueOpen(false);
+    });
+  </script>
 </body>
 </html>

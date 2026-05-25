@@ -352,13 +352,17 @@ function buildQueue() {
     const row = document.createElement('li');
     row.className = 'queue-row';
     row.dataset.index = String(i);
+    // Inputs wrapped in .q-time-group so themes can lay them out as a unit
+    // (e.g. dashboard layout stacks index / time / play vertically)
     row.innerHTML = `
       <span class="q-index">${i + 1}.</span>
-      <input type="text" class="q-h" inputmode="numeric" maxlength="1" placeholder="0" aria-label="Queue ${i+1} hours">
-      <span class="q-colon">:</span>
-      <input type="text" class="q-m" inputmode="numeric" maxlength="2" placeholder="00" aria-label="Queue ${i+1} minutes">
-      <span class="q-colon">:</span>
-      <input type="text" class="q-s" inputmode="numeric" maxlength="2" placeholder="00" aria-label="Queue ${i+1} seconds">
+      <span class="q-time-group">
+        <input type="text" class="q-h" inputmode="numeric" maxlength="1" placeholder="0" aria-label="Queue ${i+1} hours">
+        <span class="q-colon">:</span>
+        <input type="text" class="q-m" inputmode="numeric" maxlength="2" placeholder="00" aria-label="Queue ${i+1} minutes">
+        <span class="q-colon">:</span>
+        <input type="text" class="q-s" inputmode="numeric" maxlength="2" placeholder="00" aria-label="Queue ${i+1} seconds">
+      </span>
       <button class="q-play" aria-label="Run timer ${i+1}">${ICONS.play}</button>
     `;
     const h = row.querySelector('.q-h');
