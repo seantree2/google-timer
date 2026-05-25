@@ -48,7 +48,12 @@ app.whenReady().then(() => {
         { role: 'hideOthers' },
         { role: 'unhide' },
         { type: 'separator' },
-        { role: 'quit' }
+        {
+          // Custom quit item with NO accelerator — disables Cmd+Q so the timer can't be
+          // killed by accident during a session. Quit is still available by clicking the menu item.
+          label: `Quit ${app.name}`,
+          click: () => app.quit()
+        }
       ]
     }] : []),
     {
