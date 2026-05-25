@@ -313,7 +313,8 @@ html, body {
 .ring-bg { stroke: var(--ring-bg); transition: stroke 200ms ease; }
 .ring-fg {
   stroke: var(--ring-fg); stroke-linecap: round;
-  transition: stroke-dashoffset 120ms linear, stroke 200ms ease;
+  /* Shorter transitions so the ring reacts to play/pause immediately. */
+  transition: stroke-dashoffset 50ms linear, stroke 120ms ease;
 }
 
 .time-area {

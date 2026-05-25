@@ -293,6 +293,9 @@ function startRow(row) {
   if (tickerId) clearInterval(tickerId);
   tickerId = setInterval(tick, 50);
   renderMain();
+  // Fire one tick immediately so the ring and time start moving on the next
+  // animation frame instead of after the first 50ms interval.
+  requestAnimationFrame(tick);
 }
 
 function pauseRow(row) {
