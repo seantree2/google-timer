@@ -112,10 +112,11 @@ html, body {
 .queue-list {
   list-style: none;
   display: flex; flex-direction: column;
-  /* Rows fill the panel top-to-bottom — first row at top, last row at bottom,
-     remaining space distributed between them. */
-  flex: 1;
-  justify-content: space-between;
+  flex: 1;                       /* take the panel's remaining vertical space */
+  /* Each row is given a fixed slot height (panel / 10) via JS, so rows stack
+     predictably from the top: row 2 sits immediately below row 1, etc. With
+     10 rows the column fills exactly. */
+  justify-content: flex-start;
   gap: 8px;
   margin-bottom: 14px;
 }
