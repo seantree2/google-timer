@@ -268,10 +268,7 @@ function tick() {
 
 // Anywhere-click dismiss while the alarm is playing
 function dismissAlarmIfActive() {
-  if (alarmIntervalId) {
-    stopAlarm();
-    card.classList.remove('alarming');
-  }
+  if (isAlarmPlaying()) stopAlarm();
 }
 
 function deleteRow(rowId) {
@@ -329,10 +326,9 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ===== alarm =====
-// Primary: the bundled Google-search timer recording, looping until dismissed.
-// Fallback: a synthesized bell (used only if the audio file fails to load/play).
+// Plays the bundled Google-search timer recording on a loop until dismissed.
 
-// Resolve relative to renderer.js itself, so the path works whether loaded from
+// Resolve relative to renderer.js itself so the path works whether loaded from
 // the main app's index.html or from /mockups/theme-d/index.html.
 const SCRIPT_BASE = new URL('.', document.currentScript.src).href;
 const ALARM_AUDIO_URL = SCRIPT_BASE + 'sounds/google-chime.mp4';
@@ -340,63 +336,20 @@ const alarmAudio = new Audio(ALARM_AUDIO_URL);
 alarmAudio.loop = true;
 alarmAudio.preload = 'auto';
 
-let alarmIntervalId = null;       // only used by the synth fallback
-let audioCtx = null;
-
-function ensureAudioCtx() {
-  if (!audioCtx) {
-    const Ctor = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new Ctor();
-  }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
-}
-
-// Synth fallback — same bell-pings used previously, in case the audio file fails.
-function fallbackBellPing(ctx, when, baseFreq, gain = 0.4) {
-  [{ ratio: 1.0, level: 1.0 }, { ratio: 2.0, level: 0.45 }, { ratio: 3.01, level: 0.18 }].forEach(h => {
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(baseFreq * h.ratio, when);
-    g.gain.setValueAtTime(0, when);
-    g.gain.linearRampToValueAtTime(gain * h.level, when + 0.005);
-    g.gain.exponentialRampToValueAtTime(0.001, when + 1.6);
-    osc.connect(g).connect(ctx.destination);
-    osc.start(when);
-    osc.stop(when + 1.7);
-  });
-}
-function fallbackBeep() {
-  const ctx = ensureAudioCtx();
-  const now = ctx.currentTime;
-  fallbackBellPing(ctx, now,        1200, 0.36);
-  fallbackBellPing(ctx, now + 0.28, 1500, 0.32);
-}
-function startFallback() {
-  fallbackBeep();
-  alarmIntervalId = setInterval(fallbackBeep, 1500);
+function isAlarmPlaying() {
+  return !alarmAudio.paused || card.classList.contains('alarming');
 }
 
 function playAlarm() {
   stopAlarm();
-  // Try the bundled audio file first; fall back to synth if it can't play.
   alarmAudio.currentTime = 0;
-  const p = alarmAudio.play();
-  if (p && typeof p.then === 'function') {
-    p.catch((err) => {
-      console.warn('[timer] alarm audio failed, using synth fallback:', err?.message || err);
-      startFallback();
-    });
-  }
+  alarmAudio.play().catch((err) => {
+    console.warn('[timer] alarm audio failed to play:', err?.message || err);
+  });
 }
 
 function stopAlarm() {
-  // Stop the recording
   try { alarmAudio.pause(); alarmAudio.currentTime = 0; } catch {}
-  // Stop the synth fallback if it was running
-  if (alarmIntervalId) clearInterval(alarmIntervalId);
-  alarmIntervalId = null;
   card.classList.remove('alarming');
 }
 
@@ -424,7 +377,7 @@ document.addEventListener('keydown', (e) => {
   const tag = (e.target?.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea') return;
   // If the alarm is firing, ANY of Space/Esc/Enter dismisses it (no other action).
-  if (alarmIntervalId && (e.key === ' ' || e.code === 'Space' || e.key === 'Escape' || e.key === 'Enter')) {
+  if (isAlarmPlaying() && (e.key === ' ' || e.code === 'Space' || e.key === 'Escape' || e.key === 'Enter')) {
     e.preventDefault();
     dismissAlarmIfActive();
     return;
