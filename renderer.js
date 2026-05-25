@@ -248,10 +248,13 @@ timeView.addEventListener('keydown', (e) => {
 });
 
 inputList.forEach((inp, idx) => {
-  inp.addEventListener('focus', () => inp.select());
-  // Re-select on every click (including second click of a double-click) so the user can
-  // always type-to-overwrite without manually selecting.
-  inp.addEventListener('click', () => inp.select());
+  // Standard text-editing behaviour:
+  //   single click → caret positions at the click point, nothing selected
+  //   double click → selects all digits in the field
+  // (We do NOT auto-select on focus, because mouse-focusing fires focus before the
+  //  browser positions the caret, which collides with the "single click = caret only"
+  //  expectation. Keyboard nav handlers still call .select() explicitly where needed.)
+  inp.addEventListener('dblclick', () => inp.select());
   inp.addEventListener('input', () => {
     const maxLen = inp.id === 'hours' ? 1 : 2;
     inp.value = inp.value.replace(/\D/g, '').slice(0, maxLen);
@@ -374,9 +377,8 @@ function buildQueue() {
     // numeric-only + auto-advance, same UX as main edit mode
     fields.forEach((inp, idx) => {
       const maxLen = inp.classList.contains('q-h') ? 1 : 2;
-      inp.addEventListener('focus', () => inp.select());
-      // Re-select on every click so any click (single or second click of a double) lets the user type-to-overwrite.
-      inp.addEventListener('click', () => inp.select());
+      // Single click → caret only; double click → select all digits.
+      inp.addEventListener('dblclick', () => inp.select());
       inp.addEventListener('input', () => {
         inp.value = inp.value.replace(/\D/g, '').slice(0, maxLen);
         // typing in a completed row re-activates it
