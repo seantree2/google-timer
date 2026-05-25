@@ -211,17 +211,22 @@ function wireRow(row) {
     // Double-click selects all the digits.
     inp.addEventListener('dblclick', () => inp.select());
 
-    // Displacement rule: when the field still holds the default all-zeros value
-    // and the user types a digit, that first keystroke replaces the whole value
-    // (so the user can just start typing without manually deleting the zeros).
+    // Displacement rule fires AT MOST ONCE per focus session: when the user
+    // first types into a field whose value is still all zeros, that initial
+    // keystroke replaces the whole value. Subsequent keystrokes in the same
+    // focus session are normal insertions — so '0' then '0' types '00'.
+    let firstKeyAfterFocus = false;
+    inp.addEventListener('focus', () => { firstKeyAfterFocus = true; });
+    inp.addEventListener('blur',  () => { firstKeyAfterFocus = false; });
     inp.addEventListener('beforeinput', (e) => {
       if (e.inputType !== 'insertText' || !/^\d$/.test(e.data)) return;
-      if (/^0+$/.test(inp.value)) {
+      if (firstKeyAfterFocus && /^0+$/.test(inp.value)) {
         e.preventDefault();
         inp.value = e.data;
         inp.setSelectionRange(inp.value.length, inp.value.length);
         inp.dispatchEvent(new Event('input', { bubbles: true }));
       }
+      firstKeyAfterFocus = false;
     });
 
     // Restore default zeros if the user clears the field and tabs/clicks away.
