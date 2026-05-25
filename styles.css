@@ -9,6 +9,8 @@
   --accent: #FC5200;             /* Strava orange */
   --accent-dark: #DA4500;
   --accent-soft: rgba(252, 82, 0, 0.10);
+  --accent-shadow: rgba(252, 82, 0, 0.30);
+  --accent-shadow-soft: rgba(252, 82, 0, 0.20);
   --ring-bg: rgba(36, 36, 40, 0.08);
   --ring-fg: var(--accent);
   --btn-bg: rgba(252, 82, 0, 0.10);
@@ -34,6 +36,8 @@
   --accent: #F2A93B;
   --accent-dark: #C58219;
   --accent-soft: rgba(242, 169, 59, 0.12);
+  --accent-shadow: rgba(242, 169, 59, 0.34);
+  --accent-shadow-soft: rgba(242, 169, 59, 0.24);
   --ring-fg: var(--accent);
   --btn-bg: rgba(242, 169, 59, 0.12);
   --btn-bg-hover: rgba(242, 169, 59, 0.22);
@@ -45,6 +49,8 @@
   --accent: #E03145;
   --accent-dark: #B8232F;
   --accent-soft: rgba(224, 49, 69, 0.12);
+  --accent-shadow: rgba(224, 49, 69, 0.34);
+  --accent-shadow-soft: rgba(224, 49, 69, 0.24);
   --ring-fg: var(--accent);
   --btn-bg: rgba(224, 49, 69, 0.12);
   --btn-bg-hover: rgba(224, 49, 69, 0.22);
@@ -195,7 +201,7 @@ html, body {
 .q-action:hover {
   background: var(--accent-dark);
   transform: scale(1.08);
-  box-shadow: 0 3px 10px rgba(252, 82, 0, 0.30);
+  /* Hover shadow colour set later in a state-aware rule so it matches the button. */
 }
 .q-action:active { background: var(--accent-dark); transform: scale(1); }
 .q-action:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
@@ -203,9 +209,12 @@ html, body {
 
 /* Queue row action buttons follow the card's state accent — orange normally,
    yellow when paused, red when finished — so every play button across the app
-   moves together with the main timer's state. */
+   moves together with the main timer's state. Hover shadow matches the button. */
 .q-action { background: var(--accent); }
-.q-action:hover { background: var(--accent-dark); }
+.q-action:hover {
+  background: var(--accent-dark);
+  box-shadow: 0 4px 12px var(--accent-shadow);
+}
 
 /* Unconfirmed rows keep a vivid GREEN action button (the confirm-tick).
    This is independent of the timer state — it's a "confirm time" affordance. */
@@ -220,6 +229,8 @@ html, body {
 .timer-card.finished .queue-row.state-unconfirmed .q-action:hover,
 .timer-card.alarming .queue-row.state-unconfirmed .q-action:hover {
   background: #128238;
+  /* Green button gets a GREEN hover shadow — not the timer's state accent. */
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.32);
 }
 
 /* While a timer is RUNNING, the play buttons on OTHER confirmed rows are
@@ -249,9 +260,13 @@ html, body {
   display: flex; align-items: center; justify-content: center;
   padding: 0 0 2px 0;
   transition: background-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
-  box-shadow: 0 2px 6px rgba(252, 82, 0, 0.22);
+  box-shadow: 0 2px 6px var(--accent-shadow-soft);
 }
-.q-add:hover { background: var(--accent-dark); transform: scale(1.06); box-shadow: 0 4px 12px rgba(252, 82, 0, 0.30); }
+.q-add:hover {
+  background: var(--accent-dark);
+  transform: scale(1.06);
+  box-shadow: 0 4px 14px var(--accent-shadow);
+}
 .q-add:active { transform: scale(0.96); }
 .q-add:disabled { opacity: 0.30; cursor: default; transform: none; box-shadow: none; }
 
@@ -354,12 +369,12 @@ html, body {
   font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   transition: background-color 120ms ease, transform 80ms ease, box-shadow 160ms ease;
-  box-shadow: 0 2px 8px rgba(252, 82, 0, 0.20);
+  box-shadow: 0 2px 8px var(--accent-shadow-soft);
 }
 .control-btn:hover {
   background: var(--accent-dark);
-  box-shadow: 0 6px 16px rgba(252, 82, 0, 0.30);
-  transform: scale(1.03);                    /* subtle hover lift, matches queue buttons */
+  box-shadow: 0 8px 20px var(--accent-shadow);   /* more prominent hover halo */
+  transform: scale(1.03);
 }
 .control-btn:active { background: var(--accent-dark); transform: scale(0.98); }
 .control-btn:disabled { opacity: 0.30; cursor: default; transform: none; box-shadow: none; }
