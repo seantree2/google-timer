@@ -1,0 +1,233 @@
+:root {
+  --bg: #E8F0FE;
+  --ring-bg: #D2E3FC;
+  --ring-fg: #1A73E8;
+  --btn-bg: #D2E3FC;
+  --btn-bg-hover: #BAD3FA;
+  --btn-bg-active: #A5C3F5;
+  --icon: #1A73E8;
+  --icon-muted: #5F6368;
+  --text: #202124;
+  --text-muted: #5F6368;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.timer-card {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  padding: clamp(16px, 3vmin, 32px);
+}
+
+/* draggable area for moving the window on mac (the top inset above content) */
+.drag-region {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  -webkit-app-region: drag;
+}
+
+.top-bar {
+  position: absolute;
+  top: clamp(8px, 2vmin, 20px);
+  right: clamp(8px, 2vmin, 20px);
+  display: flex;
+  gap: 4px;
+  z-index: 2;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  width: clamp(36px, 5vmin, 56px);
+  height: clamp(36px, 5vmin, 56px);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--icon-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 120ms ease;
+  -webkit-app-region: no-drag;
+}
+
+.icon-btn:hover { background: rgba(60, 64, 67, 0.08); }
+.icon-btn:active { background: rgba(60, 64, 67, 0.16); }
+
+.icon-btn svg {
+  width: 60%;
+  height: 60%;
+}
+
+/* main display */
+.timer-display {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 0;
+}
+
+.progress-ring {
+  width: min(70vh, 70vw);
+  height: min(70vh, 70vw);
+  transform: rotate(-90deg);
+  display: block;
+}
+
+.ring-bg, .ring-fg {
+  fill: none;
+  stroke-width: 4;
+}
+
+.ring-bg { stroke: var(--ring-bg); }
+
+.ring-fg {
+  stroke: var(--ring-fg);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 120ms linear;
+}
+
+/* time text overlay */
+.time-area {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 400;
+  font-size: min(13vh, 13vw);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.time-area:has(.time-view:not([hidden])) {
+  font-size: min(15vh, 15vw);
+}
+
+.time-view {
+  cursor: pointer;
+  padding: 0.1em 0.2em;
+  border-radius: 0.15em;
+  outline: none;
+  transition: background-color 120ms ease;
+}
+
+.time-view:hover, .time-view:focus-visible {
+  background: rgba(26, 115, 232, 0.08);
+}
+
+.timer-running .time-view {
+  cursor: default;
+}
+
+.timer-running .time-view:hover,
+.timer-running .time-view:focus-visible {
+  background: transparent;
+}
+
+[hidden] { display: none !important; }
+
+.time-edit {
+  display: flex;
+  align-items: baseline;
+  gap: 0.15em;
+}
+
+.time-field {
+  display: flex;
+  align-items: baseline;
+}
+
+.time-edit input {
+  width: 1.4em;
+  text-align: center;
+  background: transparent;
+  border: none;
+  outline: none;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+  border-radius: 0.1em;
+  caret-color: var(--ring-fg);
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.time-edit input:focus {
+  background: rgba(26, 115, 232, 0.16);
+}
+
+.time-label {
+  font-size: 0.32em;
+  color: var(--text-muted);
+  margin: 0 0.25em 0 0.05em;
+  font-weight: 400;
+}
+
+/* bottom controls */
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: clamp(8px, 2vmin, 20px);
+  padding: clamp(8px, 2vmin, 24px) 0;
+}
+
+.control-btn {
+  background: var(--btn-bg);
+  border: none;
+  height: clamp(44px, 7vmin, 72px);
+  flex: 1;
+  max-width: clamp(160px, 32vmin, 360px);
+  min-width: 120px;
+  border-radius: 9999px;
+  cursor: pointer;
+  color: var(--icon);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 120ms ease, transform 80ms ease;
+}
+
+.control-btn:hover { background: var(--btn-bg-hover); }
+.control-btn:active {
+  background: var(--btn-bg-active);
+  transform: scale(0.98);
+}
+
+.control-btn svg {
+  width: clamp(22px, 3.2vmin, 36px);
+  height: clamp(22px, 3.2vmin, 36px);
+}
+
+/* completion flash for visual feedback when timer ends */
+.timer-card.finished {
+  animation: finish-pulse 1s ease-in-out infinite;
+}
+
+@keyframes finish-pulse {
+  0%, 100% { background: var(--bg); }
+  50% { background: #FCE8E6; }
+}
