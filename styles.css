@@ -112,23 +112,23 @@ html, body {
 .queue-list {
   list-style: none;
   display: flex; flex-direction: column;
-  /* Rows fill the panel vertically — evenly distributed whether there's 1 or 10. */
-  flex: 1;
-  justify-content: space-around;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .queue-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 15px;
+  gap: 12px;
+  padding: 14px 14px;          /* taller rows = more visual weight per slot */
+  border-radius: 12px;
+  font-size: 16px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
   transition: background-color 160ms ease, opacity 200ms ease;
+  background: rgba(255, 255, 255, 0.45);  /* subtle card background per row */
+  border: 1px solid rgba(36, 36, 40, 0.06);
 }
 
 .queue-row:hover { background: var(--row-hover); }
@@ -188,7 +188,7 @@ html, body {
   margin-left: auto;
   background: var(--accent);
   border: none;
-  width: 30px; height: 30px; border-radius: 50%;
+  width: 34px; height: 34px; border-radius: 50%;
   cursor: pointer;
   color: white;
   display: flex; align-items: center; justify-content: center;
@@ -202,7 +202,7 @@ html, body {
 }
 .q-action:active { background: var(--accent-dark); transform: scale(1); }
 .q-action:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
-.q-action svg { width: 13px; height: 13px; }
+.q-action svg { width: 14px; height: 14px; }
 
 /* The queue rows' action buttons should always look the same regardless of the
    timer-card's accent state — they're the user's controls, not status indicators.
