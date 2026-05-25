@@ -18,12 +18,16 @@
 }
 
 .timer-card.paused {
-  --ring-fg: #C99700;       /* mustard */
-  --btn-bg: rgba(201, 151, 0, 0.14);
-  --btn-bg-hover: rgba(201, 151, 0, 0.22);
-  --btn-bg-active: rgba(201, 151, 0, 0.30);
-  --icon: #8A6800;
-  --queue-input-focus: rgba(201, 151, 0, 0.18);
+  /* Shift the whole canvas cooler so the pause is unmistakable against the warm idle palette */
+  --bg: #E8E6DD;
+  --ring-bg: rgba(120, 100, 50, 0.18);
+  --ring-fg: #8A6300;            /* deep amber/dark mustard for strong contrast on cooler bg */
+  --btn-bg: rgba(138, 99, 0, 0.16);
+  --btn-bg-hover: rgba(138, 99, 0, 0.26);
+  --btn-bg-active: rgba(138, 99, 0, 0.36);
+  --icon: #6B4D00;
+  --panel-bg: rgba(255, 252, 245, 0.45);
+  --queue-input-focus: rgba(138, 99, 0, 0.18);
 }
 
 .timer-card.finished {
