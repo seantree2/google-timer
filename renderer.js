@@ -174,16 +174,18 @@ function buildRow() {
   const el = document.createElement('li');
   el.className = 'queue-row state-unconfirmed';
   el.dataset.id = String(id);
-  // Inputs start empty with "0" / "00" as PLACEHOLDERS (visual-only). Clicking
-  // positions the caret in an empty field; typing fills it.
+  // Inputs hold real '0' / '00' values. Clicking lands the caret between, before,
+  // or after the zeros (like a normal input). The first digit typed when the
+  // field is still showing the default zeros replaces the whole value, so the
+  // user can just start typing without manually deleting.
   el.innerHTML = `
     <span class="q-index"></span>
     <span class="q-time-group">
-      <input type="text" class="q-h" inputmode="numeric" maxlength="1" value="" placeholder="0" aria-label="Hours">
+      <input type="text" class="q-h" inputmode="numeric" maxlength="1" value="0" aria-label="Hours">
       <span class="q-colon">:</span>
-      <input type="text" class="q-m" inputmode="numeric" maxlength="2" value="" placeholder="00" aria-label="Minutes">
+      <input type="text" class="q-m" inputmode="numeric" maxlength="2" value="00" aria-label="Minutes">
       <span class="q-colon">:</span>
-      <input type="text" class="q-s" inputmode="numeric" maxlength="2" value="" placeholder="00" aria-label="Seconds">
+      <input type="text" class="q-s" inputmode="numeric" maxlength="2" value="00" aria-label="Seconds">
     </span>
     <button class="q-action" type="button"></button>
   `;
@@ -203,11 +205,36 @@ function buildRow() {
 function wireRow(row) {
   const fields = [row.h_in, row.m_in, row.s_in];
   fields.forEach((inp, idx) => {
+    const maxLen = inp.classList.contains('q-h') ? 1 : 2;
+
     // Single-click leaves the caret wherever the user clicked.
     // Double-click selects all the digits.
     inp.addEventListener('dblclick', () => inp.select());
+
+    // Displacement rule: when the field still holds the default all-zeros value
+    // and the user types a digit, that first keystroke replaces the whole value
+    // (so the user can just start typing without manually deleting the zeros).
+    inp.addEventListener('beforeinput', (e) => {
+      if (e.inputType !== 'insertText' || !/^\d$/.test(e.data)) return;
+      if (/^0+$/.test(inp.value)) {
+        e.preventDefault();
+        inp.value = e.data;
+        inp.setSelectionRange(inp.value.length, inp.value.length);
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+
+    // Restore default zeros if the user clears the field and tabs/clicks away.
+    // Also pad a single-digit minutes/seconds entry to two digits for tidy display.
+    inp.addEventListener('blur', () => {
+      if (inp.value === '') {
+        inp.value = maxLen === 1 ? '0' : '00';
+      } else if (maxLen === 2 && inp.value.length === 1) {
+        inp.value = inp.value.padStart(2, '0');
+      }
+    });
+
     inp.addEventListener('input', () => {
-      const maxLen = inp.classList.contains('q-h') ? 1 : 2;
       inp.value = inp.value.replace(/\D/g, '').slice(0, maxLen);
       if (inp.value.length === maxLen && idx < fields.length - 1) {
         fields[idx + 1].focus();

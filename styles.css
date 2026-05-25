@@ -177,18 +177,8 @@ html, body {
   cursor: default;
   color: var(--text);
 }
-/* Placeholder ('00' / '0') styled to match a typed value, so the field
-   visually appears to contain '00' while actually being empty. */
-.queue-row input::placeholder {
-  color: var(--text);
-  opacity: 1;
-  font-weight: 700;
-}
-.queue-row input::-webkit-input-placeholder {
-  color: var(--text);
-  opacity: 1;
-  font-weight: 700;
-}
+/* (Placeholder rules removed — the inputs now hold real '0' / '00' values
+   with a displacement rule in renderer.js to handle first-keystroke replacement.) */
 .queue-row .q-colon { color: var(--text-muted); margin: 0 1px; font-weight: 600; }
 
 /* Action button (tick/play/pause depending on row state) */
