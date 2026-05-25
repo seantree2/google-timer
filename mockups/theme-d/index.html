@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Mockup D — Card Grid</title>
+  <title>Mockup D — Glass</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main class="timer-card">
     <div class="drag-region"></div>
-
+    <aside class="queue-panel" aria-label="Timer queue">
+      <h2 class="queue-title">Queue</h2>
+      <ol class="queue-list" id="queue-list"></ol>
+    </aside>
     <section class="timer-main">
       <div class="top-bar">
         <button class="icon-btn" id="fullscreen-btn" title="Full screen (F)" aria-label="Full screen"></button>
@@ -36,11 +39,6 @@
         <button class="control-btn" id="reset-btn" title="Reset (R)" aria-label="Reset"></button>
       </div>
     </section>
-
-    <aside class="queue-panel" aria-label="Timer queue">
-      <h2 class="queue-title">Up next</h2>
-      <ol class="queue-list" id="queue-list"></ol>
-    </aside>
   </main>
   <script src="../../renderer.js"></script>
 </body>

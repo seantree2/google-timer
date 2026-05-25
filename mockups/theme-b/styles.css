@@ -1,99 +1,202 @@
-/* Theme B — Dashboard: timer on top, horizontal queue carousel below.
-   Different layout from theme A (queue is no longer a sidebar). */
+/* Theme B — Editorial: warm off-white canvas, magazine-style serif typography, queue on the
+   left as a refined numbered list with italic numerals. Subtle warm accent, generous whitespace. */
 
 :root {
-  --bg: #F4F5F7;
-  --canvas: #FFFFFF;
-  --ring-bg: rgba(99, 110, 132, 0.16);
-  --ring-fg: #4A6CFF;
-  --btn-bg: rgba(74, 108, 255, 0.12);
-  --btn-bg-hover: rgba(74, 108, 255, 0.20);
-  --btn-bg-active: rgba(74, 108, 255, 0.30);
-  --icon: #2F4FCC;
-  --icon-muted: #7D8392;
-  --text: #1E2233;
-  --text-muted: #7D8392;
-  --card-bg: #FFFFFF;
-  --card-border: rgba(30, 34, 51, 0.06);
-  --card-shadow: 0 1px 2px rgba(30, 34, 51, 0.04), 0 4px 16px rgba(30, 34, 51, 0.06);
-  --queue-input-bg: rgba(30, 34, 51, 0.04);
-  --queue-input-focus: rgba(74, 108, 255, 0.14);
+  --bg: #F6F1E5;
+  --accent: #A04A2B;             /* deep terracotta */
+  --accent-soft: rgba(160, 74, 43, 0.10);
+  --ring-bg: rgba(78, 62, 50, 0.10);
+  --ring-fg: var(--accent);
+  --btn-bg: var(--accent-soft);
+  --btn-bg-hover: rgba(160, 74, 43, 0.18);
+  --btn-bg-active: rgba(160, 74, 43, 0.30);
+  --icon: var(--accent);
+  --icon-muted: #8E7F70;
+  --text: #2B201A;
+  --text-muted: #8E7F70;
+  --divider: rgba(78, 62, 50, 0.10);
+  --queue-input-bg: transparent;
+  --queue-input-focus: rgba(160, 74, 43, 0.12);
 }
 
 .timer-card.paused {
-  --ring-fg: #F5B100;
-  --btn-bg: rgba(245, 177, 0, 0.14);
-  --btn-bg-hover: rgba(245, 177, 0, 0.22);
-  --btn-bg-active: rgba(245, 177, 0, 0.32);
-  --icon: #C68F00;
-  --queue-input-focus: rgba(245, 177, 0, 0.18);
+  --accent: #8A6700;
+  --accent-soft: rgba(138, 103, 0, 0.10);
+  --ring-fg: #8A6700;
+  --btn-bg: rgba(138, 103, 0, 0.10);
+  --btn-bg-hover: rgba(138, 103, 0, 0.18);
+  --btn-bg-active: rgba(138, 103, 0, 0.28);
+  --icon: #8A6700;
+  --queue-input-focus: rgba(138, 103, 0, 0.16);
 }
 
 .timer-card.finished {
-  --ring-fg: #E04848;
-  --btn-bg: rgba(224, 72, 72, 0.12);
-  --btn-bg-hover: rgba(224, 72, 72, 0.22);
-  --btn-bg-active: rgba(224, 72, 72, 0.32);
-  --icon: #B62F2F;
-  --queue-input-focus: rgba(224, 72, 72, 0.18);
+  --accent: #862626;
+  --accent-soft: rgba(134, 38, 38, 0.10);
+  --ring-fg: #862626;
+  --btn-bg: rgba(134, 38, 38, 0.10);
+  --btn-bg-hover: rgba(134, 38, 38, 0.18);
+  --btn-bg-active: rgba(134, 38, 38, 0.28);
+  --icon: #862626;
+  --queue-input-focus: rgba(134, 38, 38, 0.16);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
 html, body {
   width: 100%; height: 100%; overflow: hidden;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Iowan Old Style', 'Charter', 'Georgia', 'Cambria', serif;
   background: var(--bg);
   color: var(--text);
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
 }
-
 [hidden] { display: none !important; }
 
-/* Stacked layout: timer card on top, queue ribbon at bottom */
 .timer-card {
   position: relative; width: 100vw; height: 100vh;
   background: var(--bg);
-  display: flex; flex-direction: column;
-  padding: clamp(16px, 2.5vmin, 32px);
-  gap: clamp(12px, 2vmin, 24px);
+  display: flex; flex-direction: row;
   transition: background-color 200ms ease;
 }
 
 .drag-region {
   position: absolute; top: 0; left: 0; right: 0; height: 36px;
-  -webkit-app-region: drag;
+  -webkit-app-region: drag; z-index: 10;
 }
 
-/* Main timer panel as a card */
+/* --- queue (left column, editorial list) --- */
+.queue-panel {
+  width: clamp(260px, 30vw, 380px);
+  padding: clamp(40px, 6vmin, 72px) clamp(28px, 4vmin, 48px) clamp(24px, 4vmin, 40px);
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--divider);
+  background: transparent;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-app-region: no-drag;
+  transition: border-color 200ms ease;
+}
+
+.queue-title {
+  font-family: 'Iowan Old Style', 'Charter', 'Georgia', serif;
+  font-style: italic;
+  font-size: clamp(14px, 1.8vmin, 18px);
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: clamp(24px, 4vmin, 40px);
+  padding-bottom: clamp(12px, 2vmin, 20px);
+  border-bottom: 1px solid var(--divider);
+}
+
+.queue-list {
+  list-style: none;
+  display: flex; flex-direction: column;
+  flex: 1;
+  justify-content: space-around;
+  gap: 0;
+}
+
+.queue-row {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(10px, 1.6vmin, 16px);
+  padding: clamp(8px, 1.3vmin, 14px) 4px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  transition: color 120ms ease, opacity 200ms ease;
+  position: relative;
+}
+
+/* Refined hover: subtle accent underline instead of background fill */
+.queue-row::after {
+  content: '';
+  position: absolute;
+  left: 4px; right: 4px; bottom: -1px; height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 180ms ease;
+}
+.queue-row:hover::after,
+.queue-row.active::after { transform: scaleX(1); }
+
+.queue-row.active { color: var(--accent); }
+.queue-row.completed { opacity: 0.4; text-decoration: line-through; }
+
+.q-index {
+  font-style: italic;
+  font-size: clamp(22px, 2.8vmin, 30px);
+  font-weight: 400;
+  color: var(--text-muted);
+  width: 1.8em; text-align: right;
+  letter-spacing: -0.01em;
+  transition: color 120ms ease;
+}
+.queue-row:hover .q-index,
+.queue-row.active .q-index { color: var(--accent); }
+
+.q-time-group {
+  display: inline-flex; align-items: baseline;
+  font-size: clamp(16px, 2vmin, 20px);
+  font-family: 'Iowan Old Style', 'Charter', 'Georgia', serif;
+}
+
+.queue-row input {
+  width: 1.7em; text-align: center;
+  background: var(--queue-input-bg);
+  border: none; border-bottom: 1px solid transparent;
+  border-radius: 2px;
+  padding: 2px 0;
+  font: inherit; color: inherit;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  transition: background-color 120ms ease, border-color 120ms ease;
+  -webkit-user-select: text; user-select: text;
+}
+.queue-row .q-h { width: 1.0em; }
+.queue-row input:focus {
+  background: var(--queue-input-focus);
+  border-bottom-color: var(--accent);
+}
+.queue-row .q-colon { color: var(--text-muted); margin: 0 1px; }
+
+.q-play {
+  margin-left: auto; background: transparent; border: none;
+  width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+  color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+.q-play:hover { background: var(--accent-soft); transform: scale(1.08); }
+.q-play:active { background: var(--btn-bg-active); transform: scale(1); }
+.q-play svg { width: 12px; height: 12px; }
+
+/* --- main timer (right) --- */
 .timer-main {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: var(--canvas);
-  border-radius: 20px;
-  box-shadow: var(--card-shadow);
-  padding: clamp(20px, 3.5vmin, 40px);
+  display: flex; flex-direction: column;
+  padding: clamp(40px, 6vmin, 80px) clamp(40px, 5vmin, 72px);
   position: relative;
-  min-height: 0;
-  transition: background-color 200ms ease;
+  min-width: 0;
 }
 
 .top-bar {
-  position: absolute; top: clamp(14px, 2.5vmin, 22px); right: clamp(14px, 2.5vmin, 22px);
+  position: absolute; top: clamp(20px, 3vmin, 32px); right: clamp(20px, 3vmin, 32px);
   display: flex; gap: 4px; z-index: 2;
 }
 
 .icon-btn {
   background: transparent; border: none;
-  width: clamp(36px, 5vmin, 56px); height: clamp(36px, 5vmin, 56px);
+  width: clamp(38px, 5vmin, 56px); height: clamp(38px, 5vmin, 56px);
   border-radius: 50%; cursor: pointer; color: var(--icon-muted);
   display: flex; align-items: center; justify-content: center;
   transition: background-color 120ms ease, color 200ms ease;
   -webkit-app-region: no-drag;
 }
-.icon-btn:hover { background: rgba(30, 34, 51, 0.05); }
-.icon-btn:active { background: rgba(30, 34, 51, 0.09); }
+.icon-btn:hover { background: rgba(78, 62, 50, 0.06); color: var(--text); }
+.icon-btn:active { background: rgba(78, 62, 50, 0.10); }
 .icon-btn svg { width: 60%; height: 60%; }
 
 .timer-display {
@@ -102,12 +205,12 @@ html, body {
 }
 
 .progress-ring {
-  width: min(45vh, 45vw); height: min(45vh, 45vw);
+  width: min(68vh, 50vw); height: min(68vh, 50vw);
   transform: scaleX(-1) rotate(-90deg);
   display: block;
 }
 
-.ring-bg, .ring-fg { fill: none; stroke-width: 4; }
+.ring-bg, .ring-fg { fill: none; stroke-width: 3; }
 .ring-bg { stroke: var(--ring-bg); transition: stroke 200ms ease; }
 .ring-fg {
   stroke: var(--ring-fg); stroke-linecap: round;
@@ -117,141 +220,48 @@ html, body {
 .time-area {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 500;
-  font-size: min(11vh, 11vw);
-  line-height: 1; letter-spacing: -0.03em;
+  font-family: 'Iowan Old Style', 'Charter', 'Georgia', serif;
+  font-weight: 400;
+  font-size: min(16vh, 14vw);
+  line-height: 1; letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
 
 .time-view {
-  cursor: pointer; padding: 0.1em 0.2em; border-radius: 0.15em; outline: none;
+  cursor: pointer; padding: 0.05em 0.15em; border-radius: 0.1em; outline: none;
   transition: background-color 120ms ease;
 }
-.time-view:hover, .time-view:focus-visible { background: rgba(30, 34, 51, 0.04); }
+.time-view:hover, .time-view:focus-visible { background: rgba(78, 62, 50, 0.05); }
 .timer-card.timer-running .time-view,
 .timer-card.finished .time-view { cursor: default; }
 
-.time-edit { display: flex; align-items: baseline; letter-spacing: -0.03em; }
+.time-edit { display: flex; align-items: baseline; letter-spacing: -0.02em; }
 .time-edit input {
-  width: 1.4em; text-align: center;
+  width: 1.5em; text-align: center;
   background: transparent; border: none; outline: none;
   font: inherit; font-variant-numeric: tabular-nums;
   color: inherit; padding: 0; border-radius: 0.1em;
-  caret-color: var(--ring-fg);
+  caret-color: var(--accent);
   -webkit-user-select: text; user-select: text;
 }
-.time-edit input:focus { background: rgba(74, 108, 255, 0.16); }
+.time-edit input:focus { background: var(--queue-input-focus); }
 .time-edit input#hours { width: 0.85em; }
 .time-colon { margin: 0 0.02em; color: var(--text-muted); }
 
 .controls {
-  display: flex; justify-content: center; gap: clamp(10px, 2vmin, 20px);
-  padding-top: clamp(10px, 2vmin, 20px);
+  display: flex; justify-content: center; gap: clamp(12px, 2.5vmin, 24px);
+  padding-top: clamp(16px, 3vmin, 32px);
 }
 .control-btn {
-  background: var(--btn-bg); border: none;
-  height: clamp(44px, 6vmin, 60px); flex: 1;
-  max-width: clamp(160px, 28vmin, 320px); min-width: 120px;
-  border-radius: 9999px; cursor: pointer; color: var(--icon);
+  background: transparent;
+  border: 1px solid var(--accent);
+  height: clamp(48px, 7vmin, 64px); flex: 1;
+  max-width: clamp(180px, 28vmin, 340px); min-width: 140px;
+  border-radius: 9999px; cursor: pointer; color: var(--accent);
   display: flex; align-items: center; justify-content: center;
   transition: background-color 120ms ease, color 200ms ease, transform 80ms ease;
 }
-.control-btn:hover { background: var(--btn-bg-hover); }
+.control-btn:hover { background: var(--accent-soft); }
 .control-btn:active { background: var(--btn-bg-active); transform: scale(0.98); }
-.control-btn svg { width: clamp(20px, 3vmin, 30px); height: clamp(20px, 3vmin, 30px); }
-
-/* Queue ribbon below the timer */
-.queue-panel {
-  height: clamp(140px, 22vh, 200px);
-  background: var(--canvas);
-  border-radius: 20px;
-  box-shadow: var(--card-shadow);
-  padding: clamp(12px, 2vmin, 20px) clamp(16px, 2.5vmin, 28px);
-  display: flex;
-  flex-direction: column;
-  gap: clamp(8px, 1.2vmin, 14px);
-  overflow: hidden;
-  transition: background-color 200ms ease;
-}
-
-.queue-title {
-  font-size: 11px; font-weight: 600; color: var(--text-muted);
-  letter-spacing: 0.12em; text-transform: uppercase;
-  padding-left: 2px;
-}
-
-.queue-list {
-  list-style: none;
-  display: flex;
-  flex-direction: row;
-  gap: clamp(8px, 1.5vmin, 14px);
-  overflow-x: auto;
-  overflow-y: hidden;
-  flex: 1;
-  scroll-behavior: smooth;
-  padding-bottom: 4px;
-}
-
-.queue-list::-webkit-scrollbar { height: 6px; }
-.queue-list::-webkit-scrollbar-thumb {
-  background: rgba(30, 34, 51, 0.15);
-  border-radius: 3px;
-}
-
-/* Each queue row is now a vertical card */
-.queue-row {
-  flex: 0 0 clamp(110px, 13vw, 160px);
-  background: var(--bg);
-  border-radius: 12px;
-  border: 1px solid var(--card-border);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: clamp(10px, 1.5vmin, 16px) 10px;
-  gap: 8px;
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-  transition: background-color 120ms ease, opacity 200ms ease, border-color 120ms ease;
-}
-
-.queue-row:hover { background: rgba(74, 108, 255, 0.04); border-color: rgba(74, 108, 255, 0.20); }
-.queue-row.active { background: rgba(74, 108, 255, 0.10); border-color: rgba(74, 108, 255, 0.30); }
-.timer-card.paused .queue-row.active { background: rgba(245, 177, 0, 0.10); border-color: rgba(245, 177, 0, 0.30); }
-.timer-card.finished .queue-row.active { background: rgba(224, 72, 72, 0.10); border-color: rgba(224, 72, 72, 0.30); }
-.queue-row.completed { opacity: 0.4; text-decoration: line-through; }
-
-.q-index {
-  font-size: 11px; color: var(--text-muted); font-weight: 600;
-  letter-spacing: 0.06em;
-}
-
-.queue-row .q-time-group {
-  display: flex; align-items: baseline; font-size: 16px; font-weight: 500;
-}
-
-.queue-row input {
-  width: 1.7em; text-align: center;
-  background: var(--queue-input-bg);
-  border: none; border-radius: 4px; padding: 3px 0;
-  font: inherit; color: inherit;
-  font-variant-numeric: tabular-nums;
-  outline: none;
-  -webkit-user-select: text; user-select: text;
-}
-.queue-row .q-h { width: 1.0em; }
-.queue-row input:focus { background: var(--queue-input-focus); }
-.queue-row .q-colon { color: var(--text-muted); margin: 0 1px; }
-
-.q-play {
-  background: var(--btn-bg); border: none;
-  width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
-  color: var(--icon);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  transition: background-color 120ms ease, color 200ms ease;
-}
-.q-play:hover { background: var(--btn-bg-hover); }
-.q-play:active { background: var(--btn-bg-active); }
-.q-play svg { width: 14px; height: 14px; }
+.control-btn svg { width: clamp(22px, 3.2vmin, 32px); height: clamp(22px, 3.2vmin, 32px); }
