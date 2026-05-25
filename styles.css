@@ -112,7 +112,9 @@ html, body {
 .queue-list {
   list-style: none;
   display: flex; flex-direction: column;
-  gap: 4px;
+  /* Rows fill the panel vertically — evenly distributed whether there's 1 or 10. */
+  flex: 1;
+  justify-content: space-around;
   margin-bottom: 10px;
 }
 
@@ -222,6 +224,7 @@ html, body {
 /* "Add timer" button at bottom of queue */
 .q-add {
   display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
   gap: 8px;
   padding: 12px 14px;
   background: transparent;
