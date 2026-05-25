@@ -370,6 +370,8 @@ html, body {
   display: flex; align-items: center; justify-content: center;
   transition: background-color 120ms ease, transform 80ms ease, box-shadow 160ms ease;
   box-shadow: 0 2px 8px var(--accent-shadow-soft);
+  touch-action: manipulation;       /* no tap-delay, no double-tap zoom */
+  user-select: none;
 }
 .control-btn:hover {
   background: var(--accent-dark);
@@ -379,6 +381,12 @@ html, body {
 .control-btn:active { background: var(--accent-dark); transform: scale(0.98); }
 .control-btn:disabled { opacity: 0.30; cursor: default; transform: none; box-shadow: none; }
 .control-btn svg { width: clamp(22px, 3vmin, 32px); height: clamp(22px, 3vmin, 32px); }
+/* All icon SVGs inside buttons are non-interactive — clicks always hit the
+   button itself, never the inner svg/path. Fixes the "click on the icon
+   centre doesn't register" issue. */
+.control-btn svg, .control-btn svg *,
+.q-action svg, .q-action svg *,
+.icon-btn svg, .icon-btn svg * { pointer-events: none; }
 
 /* Bottom-right "TOTAL TIME" panel */
 .total-time {

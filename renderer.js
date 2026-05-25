@@ -274,10 +274,21 @@ function wireRow(row) {
       else if (e.key === 'ArrowLeft' && inp.selectionStart === 0 && idx > 0) { fields[idx - 1].focus(); fields[idx - 1].select(); }
     });
   });
-  row.action.addEventListener('click', () => {
+  // Fire on pointerdown for instant response on the row's action button too.
+  const handleRowAction = () => {
     if (row.state === 'unconfirmed') confirmRow(row);
     else if (row.state === 'confirmed' || row.state === 'paused') startRow(row);
     else if (row.state === 'running') pauseRow(row);
+  };
+  row.action.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    if (row.el.classList.contains('is-locked')) return;
+    e.preventDefault();
+    handleRowAction();
+  });
+  row.action.addEventListener('click', (e) => {
+    if (e.detail !== 0) return;     // keyboard activation only — mouse already handled
+    handleRowAction();
   });
   // right-click → custom context menu with "Exit Timer"
   row.el.addEventListener('contextmenu', (e) => {
@@ -453,11 +464,24 @@ function stopAlarm() {
 }
 
 // ===== main play/pause button =====
-startPauseBtn.addEventListener('click', () => {
+// Fire on pointerdown for instant response — `click` is gated by the browser's
+// mousedown-mouseup-click sequence and occasionally double-click filtering,
+// which made fast taps feel lossy.
+function handleMainTogglePress() {
   const a = getActive();
   if (!a) return;
   if (a.state === 'running') pauseRow(a);
   else if (a.state === 'paused' || a.state === 'confirmed') startRow(a);
+}
+startPauseBtn.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0) return;       // only the primary mouse button
+  e.preventDefault();
+  handleMainTogglePress();
+});
+// Keep a click fallback for keyboard activation (Enter/Space on a focused button)
+startPauseBtn.addEventListener('click', (e) => {
+  if (e.detail !== 0) return;       // non-zero detail means it came from a mouse — already handled
+  handleMainTogglePress();
 });
 
 // ===== add-row button =====
