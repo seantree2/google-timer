@@ -133,6 +133,18 @@ html, body {
 .queue-row:hover { background: var(--row-hover); transform: translateX(2px); }
 .queue-row.active { background: var(--row-active); }
 .queue-row.completed { opacity: 0.4; text-decoration: line-through; transform: none; }
+.queue-row.dragging { opacity: 0.35; transform: none; }
+
+.q-drag-handle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px;
+  cursor: grab; color: var(--text-muted); opacity: 0.45;
+  flex-shrink: 0;
+  transition: opacity 120ms ease, color 120ms ease;
+}
+.q-drag-handle:hover { opacity: 1; color: var(--accent); }
+.q-drag-handle:active { cursor: grabbing; }
+.q-drag-handle svg { width: 14px; height: 14px; pointer-events: none; }
 
 .q-index {
   width: 1.6em; color: var(--text-muted);

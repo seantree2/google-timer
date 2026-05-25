@@ -4,7 +4,11 @@ const ICONS = {
   pause: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>',
   reset: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>',
   fullscreen:     '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>',
-  fullscreenExit: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>'
+  fullscreenExit: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>',
+  // "drag indicator" Material icon — six dots, used as the row reorder handle
+  dragHandle:     '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M9 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6-12a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>',
+  minus:          '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 11h14v2H5z"/></svg>',
+  plus:           '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>'
 };
 
 // ===== DOM refs =====
@@ -27,6 +31,7 @@ const queueList      = document.getElementById('queue-list');
 const QUEUE_LENGTH   = 10;
 const queueRows      = [];           // array of { row, h, m, s, play, completed }
 let   activeQueueIdx = -1;            // index of the queue row currently driving the main timer, -1 if none
+let   draggedRow     = null;          // currently-dragged DOM row during a reorder
 
 // ===== state =====
 const R = 92;
@@ -358,6 +363,7 @@ function buildQueue() {
     // Inputs wrapped in .q-time-group so themes can lay them out as a unit
     // (e.g. dashboard layout stacks index / time / play vertically)
     row.innerHTML = `
+      <span class="q-drag-handle" draggable="true" title="Drag to reorder" aria-label="Drag to reorder">${ICONS.dragHandle}</span>
       <span class="q-index">${i + 1}.</span>
       <span class="q-time-group">
         <input type="text" class="q-h" inputmode="numeric" maxlength="1" placeholder="0" aria-label="Queue ${i+1} hours">
@@ -409,10 +415,55 @@ function buildQueue() {
 
     play.addEventListener('click', () => startQueueRow(i));
 
+    // ---- drag-to-reorder ----
+    const handle = row.querySelector('.q-drag-handle');
+    handle.addEventListener('dragstart', (e) => {
+      draggedRow = row;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', '');
+      // Use the whole row as the drag image, not just the small handle icon
+      try { e.dataTransfer.setDragImage(row, 20, row.offsetHeight / 2); } catch {}
+    });
+    handle.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      draggedRow = null;
+      rebuildQueueArrayFromDOM();
+    });
+    row.addEventListener('dragover', (e) => {
+      if (!draggedRow || draggedRow === row) return;
+      e.preventDefault();
+      const rect = row.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (e.clientY < midY) {
+        row.parentNode.insertBefore(draggedRow, row);
+      } else {
+        row.parentNode.insertBefore(draggedRow, row.nextSibling);
+      }
+    });
+
     queueRows.push({ row, h, m, s, play, completed: false });
     frag.appendChild(row);
   }
   queueList.appendChild(frag);
+}
+
+// After a drag finishes, the DOM order has changed.
+// Re-sync the queueRows JS array, the visible "1./2./3." labels, and the active index.
+function rebuildQueueArrayFromDOM() {
+  const domRows = Array.from(queueList.children);
+  const reordered = [];
+  domRows.forEach((domRow, newIdx) => {
+    const item = queueRows.find(r => r.row === domRow);
+    if (item) reordered.push(item);
+    const indexLabel = domRow.querySelector('.q-index');
+    if (indexLabel) indexLabel.textContent = (newIdx + 1) + '.';
+  });
+  queueRows.length = 0;
+  queueRows.push(...reordered);
+  // Active row keeps its visual highlight; re-find its new index so subsequent finish/reset logic works.
+  const activeRow = document.querySelector('.queue-row.active');
+  activeQueueIdx = activeRow ? queueRows.findIndex(r => r.row === activeRow) : -1;
 }
 
 function readQueueRowSeconds(idx) {

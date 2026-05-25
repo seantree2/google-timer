@@ -116,6 +116,24 @@ html, body {
   transition: background-color 120ms ease, opacity 200ms ease;
 }
 
+/* drag-to-reorder handle */
+.q-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  cursor: grab;
+  color: var(--text-muted);
+  opacity: 0.45;
+  flex-shrink: 0;
+  transition: opacity 120ms ease, color 120ms ease;
+}
+.q-drag-handle:hover { opacity: 1; color: var(--icon); }
+.q-drag-handle:active { cursor: grabbing; }
+.q-drag-handle svg { width: 14px; height: 14px; pointer-events: none; }
+.queue-row.dragging { opacity: 0.35; }
+
 .queue-row:hover { background: rgba(0, 0, 0, 0.03); }
 
 .queue-row.active {

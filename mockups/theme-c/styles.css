@@ -211,6 +211,18 @@ body.queue-open .queue-backdrop {
 .timer-card.paused .queue-row.active { background: rgba(255, 210, 79, 0.10); }
 .timer-card.finished .queue-row.active { background: rgba(255, 107, 107, 0.10); }
 .queue-row.completed { opacity: 0.35; text-decoration: line-through; }
+.queue-row.dragging { opacity: 0.35; }
+
+.q-drag-handle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px;
+  cursor: grab; color: var(--text-muted); opacity: 0.4;
+  flex-shrink: 0;
+  transition: opacity 120ms ease, color 120ms ease;
+}
+.q-drag-handle:hover { opacity: 1; color: var(--text); }
+.q-drag-handle:active { cursor: grabbing; }
+.q-drag-handle svg { width: 14px; height: 14px; pointer-events: none; }
 
 .q-index { width: 1.8em; color: var(--text-muted); font-size: 0.85em; text-align: right; }
 

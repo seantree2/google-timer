@@ -117,6 +117,18 @@ html, body {
 .queue-row:hover { background: rgba(255, 165, 0, 0.04); border-left-color: var(--accent); }
 .queue-row.active { background: rgba(255, 165, 0, 0.10); border-left-color: var(--accent); }
 .queue-row.completed { opacity: 0.35; text-decoration: line-through; }
+.queue-row.dragging { opacity: 0.35; }
+
+.q-drag-handle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px;
+  cursor: grab; color: var(--text-muted); opacity: 0.4;
+  flex-shrink: 0;
+  transition: opacity 120ms ease, color 120ms ease;
+}
+.q-drag-handle:hover { opacity: 1; color: var(--accent); }
+.q-drag-handle:active { cursor: grabbing; }
+.q-drag-handle svg { width: 12px; height: 12px; pointer-events: none; }
 
 .q-index {
   width: 2.2em;
@@ -160,6 +172,30 @@ html, body {
 .q-play:hover { background: var(--btn-bg-hover); }
 .q-play:active { background: var(--btn-bg-active); }
 .q-play svg { width: 12px; height: 12px; }
+
+/* Queue row +/- steppers — small brutalist squares flanking each input */
+.q-stepper-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+.q-stepper {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  background: transparent;
+  border: 1px solid var(--divider);
+  color: var(--text-muted);
+  width: 16px; height: 22px;
+  padding: 0;
+  cursor: pointer;
+  line-height: 1;
+  border-radius: 0;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+  -webkit-app-region: no-drag;
+}
+.q-stepper:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.q-stepper:active { background: var(--accent-hot); }
 
 /* --- main timer panel (right) --- */
 .timer-main {
@@ -288,7 +324,7 @@ html, body {
 .timer-card.timer-running .time-view,
 .timer-card.finished .time-view { cursor: default; }
 
-.time-edit { display: flex; align-items: baseline; letter-spacing: -0.02em; }
+.time-edit { display: flex; align-items: center; letter-spacing: -0.02em; }
 .time-edit input {
   width: 1.5em; text-align: center;
   background: transparent; border: none; outline: none;
@@ -300,6 +336,31 @@ html, body {
 .time-edit input:focus { background: rgba(255, 165, 0, 0.14); }
 .time-edit input#hours { width: 0.85em; }
 .time-colon { margin: 0 0.02em; color: var(--text-dim); }
+
+/* +/- steppers around each H/M/S input — vertically stacked, brutalist style */
+.time-stepper-group {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.04em;
+}
+.time-stepper {
+  font-family: inherit;
+  font-size: 0.18em;
+  font-weight: 700;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  width: 1.8em; height: 1em;
+  padding: 0.15em 0;
+  cursor: pointer;
+  line-height: 1;
+  border-radius: 0;
+  transition: background-color 120ms ease, color 120ms ease;
+  -webkit-app-region: no-drag;
+}
+.time-stepper:hover { background: var(--accent); color: var(--bg); }
+.time-stepper:active { background: var(--accent-hot); }
 
 .controls {
   display: flex; justify-content: center; gap: clamp(12px, 2.5vmin, 24px);

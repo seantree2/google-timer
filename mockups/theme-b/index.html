@@ -37,11 +37,23 @@
             <span id="time-content">5:00</span>
           </div>
           <div class="time-edit" id="time-edit" hidden>
-            <input type="text" id="hours" inputmode="numeric" maxlength="1" value="0">
+            <span class="time-stepper-group">
+              <button class="time-stepper" data-target="hours" data-delta="1" aria-label="Increment hours">+</button>
+              <input type="text" id="hours" inputmode="numeric" maxlength="1" value="0">
+              <button class="time-stepper" data-target="hours" data-delta="-1" aria-label="Decrement hours">&minus;</button>
+            </span>
             <span class="time-colon">:</span>
-            <input type="text" id="minutes" inputmode="numeric" maxlength="2" value="05">
+            <span class="time-stepper-group">
+              <button class="time-stepper" data-target="minutes" data-delta="1" aria-label="Increment minutes">+</button>
+              <input type="text" id="minutes" inputmode="numeric" maxlength="2" value="05">
+              <button class="time-stepper" data-target="minutes" data-delta="-1" aria-label="Decrement minutes">&minus;</button>
+            </span>
             <span class="time-colon">:</span>
-            <input type="text" id="seconds" inputmode="numeric" maxlength="2" value="00">
+            <span class="time-stepper-group">
+              <button class="time-stepper" data-target="seconds" data-delta="1" aria-label="Increment seconds">+</button>
+              <input type="text" id="seconds" inputmode="numeric" maxlength="2" value="00">
+              <button class="time-stepper" data-target="seconds" data-delta="-1" aria-label="Decrement seconds">&minus;</button>
+            </span>
           </div>
         </div>
       </div>
@@ -55,6 +67,10 @@
 
   <script src="../../renderer.js"></script>
   <script>
+  // IIFE: isolates this script's `const card` from renderer.js's `const card`
+  // (classic scripts share the global declarative environment — duplicate
+  // top-level `const` would silently abort the whole script).
+  (function () {
     // Size toggle — switch between three display sizes (S/M/L)
     const card = document.querySelector('.timer-card');
     document.querySelectorAll('.size-btn').forEach(btn => {
@@ -77,6 +93,55 @@
     }
     new MutationObserver(updateStatus).observe(card, { attributes: true, attributeFilter: ['class'] });
     updateStatus();
+
+    // ===== Increment/decrement steppers =====
+    // Main timer steppers
+    function stepInput(input, delta, max, padLen) {
+      let v = (parseInt(input.value, 10) || 0) + delta;
+      if (v < 0) v = max;            // wrap around
+      if (v > max) v = 0;
+      input.value = String(v).padStart(padLen, '0');
+    }
+
+    document.querySelectorAll('.time-stepper').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.target;
+        const delta = parseInt(btn.dataset.delta, 10);
+        const input = document.getElementById(target);
+        const max = target === 'hours' ? 9 : 59;
+        const padLen = target === 'hours' ? 1 : 2;
+        stepInput(input, delta, max, padLen);
+      });
+    });
+
+    // Queue row steppers — inject after renderer.js has built the queue
+    document.querySelectorAll('.queue-row').forEach(row => {
+      ['q-h', 'q-m', 'q-s'].forEach(cls => {
+        const input = row.querySelector('.' + cls);
+        if (!input) return;
+        const max = cls === 'q-h' ? 9 : 59;
+        const padLen = cls === 'q-h' ? 1 : 2;
+        const group = document.createElement('span');
+        group.className = 'q-stepper-group';
+        const minus = document.createElement('button');
+        minus.className = 'q-stepper';
+        minus.type = 'button';
+        minus.textContent = '−';   // minus sign, not hyphen
+        minus.setAttribute('aria-label', 'Decrement');
+        const plus = document.createElement('button');
+        plus.className = 'q-stepper';
+        plus.type = 'button';
+        plus.textContent = '+';
+        plus.setAttribute('aria-label', 'Increment');
+        input.parentNode.insertBefore(group, input);
+        group.appendChild(minus);
+        group.appendChild(input);
+        group.appendChild(plus);
+        minus.addEventListener('click', (e) => { e.stopPropagation(); stepInput(input, -1, max, padLen); });
+        plus.addEventListener('click', (e) => { e.stopPropagation(); stepInput(input, 1, max, padLen); });
+      });
+    });
+  })();
   </script>
 </body>
 </html>
