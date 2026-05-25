@@ -133,6 +133,13 @@ function reset() {
     queueRows[activeQueueIdx].row.classList.remove('active');
     activeQueueIdx = -1;
   }
+  // Snap the ring back instantly — no slow rewind animation.
+  // Disable transition, apply the empty-ring offset, force a reflow, then restore the transition.
+  const prevTransition = progress.style.transition;
+  progress.style.transition = 'none';
+  applyProgress();
+  void progress.getBoundingClientRect();
+  progress.style.transition = prevTransition;
   render();
 }
 
