@@ -11,8 +11,12 @@
     <div class="drag-region"></div>
 
     <aside class="queue-panel" aria-label="Timer queue">
-      <h2 class="queue-title">Queue</h2>
+      <h2 class="section-title">Queue</h2>
       <ol class="queue-list" id="queue-list"></ol>
+      <button class="q-add" id="q-add" type="button" aria-label="Add a timer">
+        <span class="q-add-icon" aria-hidden="true">+</span>
+        <span class="q-add-label">Add timer</span>
+      </button>
     </aside>
 
     <section class="timer-main">
@@ -20,31 +24,28 @@
         <button class="icon-btn" id="fullscreen-btn" title="Full screen (F)" aria-label="Full screen"></button>
       </div>
 
+      <h2 class="section-title timer-section-title">Timer</h2>
+
       <div class="timer-display">
         <svg class="progress-ring" viewBox="0 0 200 200" aria-hidden="true">
           <circle class="ring-bg" cx="100" cy="100" r="92"></circle>
           <circle class="ring-fg" cx="100" cy="100" r="92" id="progress"></circle>
         </svg>
-
         <div class="time-area">
-          <div class="time-view" id="time-view" tabindex="0" role="button" aria-label="Set timer duration">
-            <span id="time-content">5:00</span>
-          </div>
-          <div class="time-edit" id="time-edit" hidden>
-            <input type="text" id="hours" inputmode="numeric" maxlength="1" value="0" aria-label="Hours">
-            <span class="time-colon">:</span>
-            <input type="text" id="minutes" inputmode="numeric" maxlength="2" value="05" aria-label="Minutes">
-            <span class="time-colon">:</span>
-            <input type="text" id="seconds" inputmode="numeric" maxlength="2" value="00" aria-label="Seconds">
-          </div>
+          <span class="time-text" id="time-content">0:00</span>
         </div>
       </div>
 
-      <div class="controls">
-        <button class="control-btn" id="start-pause-btn" title="Start / Pause (Space)" aria-label="Start or pause"></button>
-        <button class="control-btn" id="reset-btn" title="Reset (R)" aria-label="Reset"></button>
+      <div class="total-time">
+        <span class="total-label">Total time</span>
+        <span class="total-value" id="total-value">0:00</span>
       </div>
     </section>
+
+    <!-- right-click context menu (hidden until summoned) -->
+    <div class="ctx-menu" id="ctx-menu" hidden role="menu">
+      <button class="ctx-item" id="ctx-delete" type="button" role="menuitem">Exit Timer</button>
+    </div>
   </main>
 
   <script src="renderer.js"></script>

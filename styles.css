@@ -1,413 +1,338 @@
-/* ---------- state palettes (Google Material colors) ---------- */
+/* Timer app — Strava-inspired (locked-in design).
+   Off-white canvas, bold orange accent, geometric sans-serif, frosted glass panels. */
+
 :root {
-  --bg: #E8F0FE;
-  --ring-bg: #D2E3FC;
-  --ring-fg: #1A73E8;
-  --btn-bg: #D2E3FC;
-  --btn-bg-hover: #BAD3FA;
-  --btn-bg-active: #A5C3F5;
-  --icon: #1A73E8;
-  --icon-muted: #5F6368;
-  --text: #202124;
-  --text-muted: #5F6368;
+  --bg-grad-1: #FCFCFE;
+  --bg-grad-2: #F5F5F8;
+  --bg-grad-3: #FFF1E7;          /* warm tint */
+  --canvas: #FFFFFF;
+  --accent: #FC5200;             /* Strava orange */
+  --accent-dark: #DA4500;
+  --accent-soft: rgba(252, 82, 0, 0.10);
+  --ring-bg: rgba(36, 36, 40, 0.08);
+  --ring-fg: var(--accent);
+  --btn-bg: rgba(252, 82, 0, 0.10);
+  --btn-bg-hover: rgba(252, 82, 0, 0.18);
+  --btn-bg-active: rgba(252, 82, 0, 0.28);
+  --icon: var(--accent);
+  --icon-muted: #6D6D78;
+  --text: #242428;
+  --text-muted: #6D6D78;
+  --text-dim: #9CA0AB;
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.78);
+  --glass-shadow: 0 1px 1px rgba(36, 36, 40, 0.05), 0 8px 24px rgba(36, 36, 40, 0.08);
+  --row-hover: rgba(255, 255, 255, 0.75);
+  --row-active: rgba(252, 82, 0, 0.10);
+  --row-paused: rgba(242, 169, 59, 0.14);
+  --row-finished: rgba(224, 49, 69, 0.10);
+  --queue-input-bg: rgba(36, 36, 40, 0.04);
+  --queue-input-focus: rgba(252, 82, 0, 0.14);
 }
 
-/* paused state -> yellow (Google's Material amber/yellow) */
 .timer-card.paused {
-  --bg: #FEF7E0;
-  --ring-bg: #FEEFC3;
-  --ring-fg: #F9AB00;
-  --btn-bg: #FEEFC3;
-  --btn-bg-hover: #FDE293;
-  --btn-bg-active: #FCD66D;
-  --icon: #F9AB00;
-  --icon-muted: #936F00;
+  --accent: #F2A93B;
+  --accent-dark: #C58219;
+  --accent-soft: rgba(242, 169, 59, 0.12);
+  --ring-fg: var(--accent);
+  --btn-bg: rgba(242, 169, 59, 0.12);
+  --btn-bg-hover: rgba(242, 169, 59, 0.22);
+  --btn-bg-active: rgba(242, 169, 59, 0.32);
+  --icon: var(--accent-dark);
 }
 
-/* finished state -> solid red, no animation */
 .timer-card.finished {
-  --bg: #FCE8E6;
-  --ring-bg: #FAD2CF;
-  --ring-fg: #EA4335;
-  --btn-bg: #FAD2CF;
-  --btn-bg-hover: #F7B6B0;
-  --btn-bg-active: #F19891;
-  --icon: #EA4335;
-  --icon-muted: #B31412;
+  --accent: #E03145;
+  --accent-dark: #B8232F;
+  --accent-soft: rgba(224, 49, 69, 0.12);
+  --ring-fg: var(--accent);
+  --btn-bg: rgba(224, 49, 69, 0.12);
+  --btn-bg-hover: rgba(224, 49, 69, 0.22);
+  --btn-bg-active: rgba(224, 49, 69, 0.32);
+  --icon: var(--accent-dark);
 }
 
-/* ---------- layout ---------- */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
 html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg);
+  width: 100%; height: 100%; overflow: hidden;
+  font-family: 'Inter', 'Maison Neue', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-grad-2);
   color: var(--text);
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
 }
-
 [hidden] { display: none !important; }
 
 .timer-card {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  background: var(--bg);
-  display: flex;
-  flex-direction: row;
-  transition: background-color 200ms ease;
+  position: relative; width: 100vw; height: 100vh;
+  background:
+    radial-gradient(ellipse at top left, var(--bg-grad-1) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, var(--bg-grad-3) 0%, transparent 60%),
+    var(--bg-grad-2);
+  display: flex; flex-direction: row;
+  padding: clamp(18px, 2.5vmin, 32px);
+  gap: clamp(14px, 2.2vmin, 24px);
+  transition: background 200ms ease;
 }
 
-.timer-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: clamp(16px, 3vmin, 32px);
-  position: relative;
-  min-width: 0;
+.drag-region {
+  position: absolute; top: 0; left: 0; right: 0; height: 36px;
+  -webkit-app-region: drag; z-index: 10;
 }
 
-/* ---------- queue panel ---------- */
+.section-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding-left: 4px;
+}
+
+/* --- queue (left, frosted glass) --- */
 .queue-panel {
-  width: clamp(240px, 28vw, 360px);
-  display: flex;
-  flex-direction: column;
-  padding: clamp(20px, 4vmin, 40px) clamp(16px, 2.5vmin, 28px);
-  /* integrated look: no separate white background, no hard border */
-  background: transparent;
+  width: clamp(260px, 30vw, 360px);
+  padding: clamp(28px, 4vmin, 48px) clamp(20px, 3vmin, 32px);
+  display: flex; flex-direction: column;
+  background: var(--glass-bg);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: var(--glass-shadow);
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-app-region: no-drag;
 }
 
-.queue-title {
-  /* heading removed visually for integration — rows imply queue via numbering */
-  display: none;
+.queue-panel .section-title {
+  margin-bottom: clamp(14px, 2.2vmin, 22px);
 }
 
 .queue-list {
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  /* fill the full vertical space rather than leaving the bottom half empty */
-  flex: 1;
-  justify-content: space-around;
-  margin: 0;
-  padding: 0;
+  display: flex; flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
 }
 
 .queue-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  font-size: 16px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
-  transition: background-color 120ms ease, opacity 200ms ease;
+  transition: background-color 160ms ease, opacity 200ms ease;
 }
 
-/* drag-to-reorder handle */
-.q-drag-handle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  cursor: grab;
-  color: var(--text-muted);
-  opacity: 0.45;
-  flex-shrink: 0;
-  transition: opacity 120ms ease, color 120ms ease;
-}
-.q-drag-handle:hover { opacity: 1; color: var(--icon); }
-.q-drag-handle:active { cursor: grabbing; }
-.q-drag-handle svg { width: 14px; height: 14px; pointer-events: none; }
-.queue-row.dragging { opacity: 0.35; }
-
-.queue-row:hover { background: rgba(0, 0, 0, 0.03); }
-
-.queue-row.active {
-  background: rgba(26, 115, 232, 0.10);
-}
-
-.timer-card.paused .queue-row.active {
-  background: rgba(249, 171, 0, 0.14);
-}
-
-.timer-card.finished .queue-row.active {
-  background: rgba(234, 67, 53, 0.10);
-}
-
-.queue-row.completed {
-  opacity: 0.45;
-  text-decoration: line-through;
-}
-
-.queue-row.completed .q-play {
-  opacity: 0.5;
-}
+.queue-row:hover { background: var(--row-hover); }
+.queue-row.state-running { background: var(--row-active); }
+.queue-row.state-paused { background: var(--row-paused); }
+.queue-row.state-completed { opacity: 0.4; text-decoration: line-through; }
 
 .q-index {
-  width: 1.8em;
+  width: 1.6em;
   color: var(--text-muted);
-  font-size: 0.85em;
+  font-size: 0.78em;
+  font-weight: 800;
+  letter-spacing: 0.04em;
   text-align: right;
-}
-
-.queue-row input {
-  width: 1.9em;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.04);
-  border: none;
-  border-radius: 4px;
-  padding: 4px 0;
-  font: inherit;
-  color: inherit;
-  font-variant-numeric: tabular-nums;
-  outline: none;
-  -webkit-user-select: text;
-  user-select: text;
-}
-
-.queue-row .q-h {
-  width: 1.1em;  /* narrower because hours is only 1 digit (max 9) */
-}
-
-.queue-row input:focus {
-  background: rgba(26, 115, 232, 0.14);
-}
-
-.timer-card.paused .queue-row input:focus {
-  background: rgba(249, 171, 0, 0.16);
-}
-
-.queue-row .q-colon {
-  color: var(--text-muted);
-  margin: 0 1px;
-}
-
-.q-play {
-  margin-left: auto;
-  background: var(--btn-bg);
-  border: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  cursor: pointer;
-  color: var(--icon);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 120ms ease, color 200ms ease;
+  text-transform: uppercase;
   flex-shrink: 0;
 }
 
-.q-play:hover { background: var(--btn-bg-hover); }
-.q-play:active { background: var(--btn-bg-active); }
-.q-play:disabled { opacity: 0.4; cursor: default; }
+.q-time-group { display: inline-flex; align-items: baseline; }
 
-.q-play svg {
-  width: 14px;
-  height: 14px;
+/* Editable inputs (unconfirmed state) — text-style inputs */
+.queue-row input {
+  width: 1.8em; text-align: center;
+  background: var(--queue-input-bg);
+  border: none; border-radius: 6px; padding: 4px 0;
+  font: inherit; color: inherit; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  transition: background-color 120ms ease;
+  -webkit-user-select: text; user-select: text;
+}
+.queue-row .q-h { width: 1.0em; }
+.queue-row input:focus { background: var(--queue-input-focus); }
+.queue-row input:disabled,
+.queue-row input[readonly] {
+  background: transparent;
+  -webkit-user-select: none; user-select: none;
+  cursor: default;
+  color: var(--text);
+}
+.queue-row .q-colon { color: var(--text-muted); margin: 0 1px; font-weight: 600; }
+
+/* Action button (tick/play/pause depending on row state) */
+.q-action {
+  margin-left: auto;
+  background: var(--accent);
+  border: none;
+  width: 30px; height: 30px; border-radius: 50%;
+  cursor: pointer;
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+.q-action:hover {
+  background: var(--accent-dark);
+  transform: scale(1.08);
+  box-shadow: 0 3px 10px rgba(252, 82, 0, 0.30);
+}
+.q-action:active { background: var(--accent-dark); transform: scale(1); }
+.q-action:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
+.q-action svg { width: 13px; height: 13px; }
+
+/* "Add timer" button at bottom of queue */
+.q-add {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: transparent;
+  border: 1.5px dashed rgba(36, 36, 40, 0.18);
+  border-radius: 12px;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.q-add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(252, 82, 0, 0.04);
+}
+.q-add:active { background: rgba(252, 82, 0, 0.10); }
+.q-add:disabled { opacity: 0.35; cursor: default; }
+.q-add-icon { font-size: 18px; line-height: 1; font-weight: 400; }
+
+/* --- main timer (right, floating card) --- */
+.timer-main {
+  flex: 1;
+  display: flex; flex-direction: column;
+  background: var(--glass-bg);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: var(--glass-shadow);
+  padding: clamp(24px, 4vmin, 56px);
+  position: relative;
+  min-width: 0;
 }
 
-.drag-region {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 36px;
-  -webkit-app-region: drag;
+.timer-section-title {
+  margin-bottom: clamp(8px, 1.5vmin, 16px);
 }
 
 .top-bar {
-  position: absolute;
-  top: clamp(8px, 2vmin, 20px);
-  right: clamp(8px, 2vmin, 20px);
-  display: flex;
-  gap: 4px;
-  z-index: 2;
+  position: absolute; top: clamp(16px, 3vmin, 28px); right: clamp(16px, 3vmin, 28px);
+  display: flex; gap: 4px; z-index: 2;
 }
 
 .icon-btn {
-  background: transparent;
-  border: none;
-  width: clamp(36px, 5vmin, 56px);
-  height: clamp(36px, 5vmin, 56px);
-  border-radius: 50%;
-  cursor: pointer;
-  color: var(--icon-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: transparent; border: none;
+  width: clamp(36px, 5vmin, 56px); height: clamp(36px, 5vmin, 56px);
+  border-radius: 50%; cursor: pointer; color: var(--icon-muted);
+  display: flex; align-items: center; justify-content: center;
   transition: background-color 120ms ease, color 200ms ease;
   -webkit-app-region: no-drag;
 }
+.icon-btn:hover { background: rgba(36, 36, 40, 0.06); color: var(--text); }
+.icon-btn:active { background: rgba(36, 36, 40, 0.10); }
+.icon-btn svg { width: 60%; height: 60%; }
 
-.icon-btn:hover { background: rgba(60, 64, 67, 0.08); }
-.icon-btn:active { background: rgba(60, 64, 67, 0.16); }
-
-.icon-btn svg {
-  width: 60%;
-  height: 60%;
-}
-
-/* ---------- progress ring ---------- */
 .timer-display {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  min-height: 0;
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  position: relative; min-height: 0;
 }
 
+/* Ring: 10% smaller than before — was 70vh/vw, now 63 */
 .progress-ring {
-  width: min(70vh, 70vw);
-  height: min(70vh, 70vw);
-  /* scaleX(-1) flips the draw direction so the ring fills counter-clockwise from 12 o'clock */
+  width: min(63vh, 43vw); height: min(63vh, 43vw);
   transform: scaleX(-1) rotate(-90deg);
   display: block;
+  filter: drop-shadow(0 8px 20px rgba(252, 82, 0, 0.15));
 }
 
-.ring-bg, .ring-fg {
-  fill: none;
-  stroke-width: 4;
-}
-
-.ring-bg {
-  stroke: var(--ring-bg);
-  transition: stroke 200ms ease;
-}
-
+.ring-bg, .ring-fg { fill: none; stroke-width: 5; }
+.ring-bg { stroke: var(--ring-bg); transition: stroke 200ms ease; }
 .ring-fg {
-  stroke: var(--ring-fg);
-  stroke-linecap: round;
+  stroke: var(--ring-fg); stroke-linecap: round;
   transition: stroke-dashoffset 120ms linear, stroke 200ms ease;
 }
 
-/* ---------- time display ---------- */
 .time-area {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 400;
-  font-size: min(14vh, 14vw);
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+  /* 10% smaller than before — was 16vh/14vw, now 14/12.5 */
+  font-size: min(14vh, 12.5vw);
   line-height: 1;
-  letter-spacing: 0;
-  /* tabular-nums forces every digit to occupy the same advance width — kills the jitter */
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-.time-view {
-  cursor: pointer;
-  padding: 0.1em 0.2em;
-  border-radius: 0.15em;
-  outline: none;
-  transition: background-color 120ms ease;
-}
-
-.time-view:hover, .time-view:focus-visible {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.timer-card.timer-running .time-view,
-.timer-card.finished .time-view {
-  cursor: default;
-}
-
-.timer-card.timer-running .time-view:hover,
-.timer-card.timer-running .time-view:focus-visible,
-.timer-card.finished .time-view:hover,
-.timer-card.finished .time-view:focus-visible {
-  background: transparent;
-}
-
-/* edit mode: colons, no h/m/s labels, all digits the same size as view mode */
-.time-edit {
-  display: flex;
-  align-items: baseline;
-  /* tighten the spacing so HH:MM:SS fits well inside the circle */
-  letter-spacing: -0.02em;
-}
-
-.time-edit input {
-  width: 1.4em;
-  text-align: center;
-  background: transparent;
-  border: none;
-  outline: none;
-  font: inherit;
-  font-variant-numeric: tabular-nums;
-  color: inherit;
-  padding: 0;
-  border-radius: 0.1em;
-  caret-color: var(--ring-fg);
-  -webkit-user-select: text;
-  user-select: text;
-}
-
-.time-edit input#hours {
-  width: 0.85em;  /* single-digit hours fits in less space */
-}
-
-.time-edit input:focus {
-  background: rgba(26, 115, 232, 0.16);
-}
-
-.timer-card.paused .time-edit input:focus {
-  background: rgba(249, 171, 0, 0.18);
-}
-
-.time-colon {
-  margin: 0 0.02em;
   color: var(--text);
 }
 
-/* ---------- bottom controls ---------- */
-.controls {
-  display: flex;
-  justify-content: center;
-  gap: clamp(8px, 2vmin, 20px);
-  padding: clamp(8px, 2vmin, 24px) 0;
+.time-text {
+  padding: 0.05em 0.15em;
 }
 
-.control-btn {
-  background: var(--btn-bg);
+/* Bottom-right "TOTAL TIME" panel */
+.total-time {
+  position: absolute;
+  bottom: clamp(20px, 3vmin, 36px);
+  right: clamp(24px, 4vmin, 48px);
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 4px;
+}
+.total-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.total-value {
+  font-size: clamp(16px, 2.2vmin, 22px);
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Right-click context menu */
+.ctx-menu {
+  position: fixed;
+  background: white;
+  border: 1px solid rgba(36, 36, 40, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(36, 36, 40, 0.14);
+  padding: 4px;
+  z-index: 1000;
+  min-width: 140px;
+  display: flex; flex-direction: column;
+}
+.ctx-item {
+  background: transparent;
   border: none;
-  height: clamp(44px, 7vmin, 72px);
-  flex: 1;
-  max-width: clamp(160px, 32vmin, 360px);
-  min-width: 120px;
-  border-radius: 9999px;
+  padding: 8px 12px;
+  text-align: left;
   cursor: pointer;
-  color: var(--icon);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 120ms ease, color 200ms ease, transform 80ms ease;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  border-radius: 6px;
+  transition: background-color 100ms ease, color 100ms ease;
 }
-
-.control-btn:hover { background: var(--btn-bg-hover); }
-.control-btn:active {
-  background: var(--btn-bg-active);
-  transform: scale(0.98);
-}
-
-.control-btn svg {
-  width: clamp(22px, 3.2vmin, 36px);
-  height: clamp(22px, 3.2vmin, 36px);
-}
+.ctx-item:hover { background: var(--accent-soft); color: var(--accent); }

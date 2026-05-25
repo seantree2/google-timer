@@ -1,207 +1,322 @@
-// ===== SVG icon definitions (Material Design) =====
+// ===== SVG icon definitions =====
 const ICONS = {
   play:  '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>',
   pause: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>',
-  reset: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>',
+  // checkmark/tick — used to confirm a freshly-typed time
+  tick:  '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
   fullscreen:     '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>',
-  fullscreenExit: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>',
-  // "drag indicator" Material icon — six dots, used as the row reorder handle
-  dragHandle:     '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M9 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6-12a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>',
-  minus:          '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 11h14v2H5z"/></svg>',
-  plus:           '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>'
+  fullscreenExit: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>'
 };
 
 // ===== DOM refs =====
 const card           = document.querySelector('.timer-card');
-const timeView       = document.getElementById('time-view');
 const timeContent    = document.getElementById('time-content');
-const timeEdit       = document.getElementById('time-edit');
-const inputs         = {
-  h: document.getElementById('hours'),
-  m: document.getElementById('minutes'),
-  s: document.getElementById('seconds')
-};
-const inputList      = [inputs.h, inputs.m, inputs.s];
 const progress       = document.getElementById('progress');
-const startPauseBtn  = document.getElementById('start-pause-btn');
-const resetBtn       = document.getElementById('reset-btn');
 const fullscreenBtn  = document.getElementById('fullscreen-btn');
 const queueList      = document.getElementById('queue-list');
-
-const QUEUE_LENGTH   = 10;
-const queueRows      = [];           // array of { row, h, m, s, play, completed }
-let   activeQueueIdx = -1;            // index of the queue row currently driving the main timer, -1 if none
-let   draggedRow     = null;          // currently-dragged DOM row during a reorder
+const queueAddBtn    = document.getElementById('q-add');
+const totalValueEl   = document.getElementById('total-value');
+const ctxMenu        = document.getElementById('ctx-menu');
+const ctxDelete      = document.getElementById('ctx-delete');
 
 // ===== state =====
 const R = 92;
 const CIRCUMFERENCE = 2 * Math.PI * R;
 progress.style.strokeDasharray = CIRCUMFERENCE;
-progress.style.strokeDashoffset = CIRCUMFERENCE; // start empty: ring fills as time passes
+progress.style.strokeDashoffset = CIRCUMFERENCE;
 
-let totalSeconds        = 300; // 5:00 default
-let remainingMs         = 300_000;
-let runStartTimestamp   = 0;
-let runStartRemainingMs = 0;
-let tickerId            = null;
-let isRunning           = false;
-let isPaused            = false;
-let isFinished          = false;
-let editMode            = false;
-let alarmIntervalId     = null;
-let audioCtx            = null;
+const QUEUE_MAX = 10;
+const QUEUE_MIN = 1;
 
-// ===== rendering =====
+// Each queue item is one of: 'unconfirmed' | 'confirmed' | 'running' | 'paused' | 'completed'
+const queue          = [];                // { id, h, m, s, totalSec, remainingMs, state, el, h_in, m_in, s_in, action }
+let   nextId         = 0;
+let   activeId       = null;              // id of the row whose timer is currently the main display
+let   tickerId       = null;
+let   runStartTs     = 0;
+let   runStartRemMs  = 0;
+let   totalElapsedMs = 0;                 // running total across every confirmed queue run
+let   ctxTargetId    = null;              // id of the row the context menu is currently anchored to
+
+// ===== utility =====
+function pad2(n) { return String(n).padStart(2, '0'); }
+
 function formatTime(totalMs) {
-  const totalSec = Math.max(0, Math.ceil(totalMs / 1000));
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  const pad = (n) => String(n).padStart(2, '0');
-  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+  const s = Math.max(0, Math.ceil(totalMs / 1000));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return h > 0 ? `${h}:${pad2(m)}:${pad2(sec)}` : `${m}:${pad2(sec)}`;
 }
 
-function progressFraction() {
-  // Fraction of the ring that should be FILLED.
-  // Google's behavior: ring starts empty and fills as time elapses.
-  if (totalSeconds <= 0) return 0;
-  const elapsedMs = Math.max(0, totalSeconds * 1000 - remainingMs);
-  return Math.min(1, elapsedMs / (totalSeconds * 1000));
+function formatTotalTime(totalMs) {
+  // Always show H:MM:SS for the bottom-right indicator so the format stays consistent as it grows
+  const s = Math.max(0, Math.floor(totalMs / 1000));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${h}:${pad2(m)}:${pad2(sec)}`;
 }
 
-function applyProgress() {
-  const filled = progressFraction();
-  // strokeDashoffset = circumference means 0% drawn; offset = 0 means 100% drawn.
-  // We want filled portion drawn, so offset = circumference * (1 - filled).
-  progress.style.strokeDashoffset = CIRCUMFERENCE * (1 - filled);
+// ===== main timer display =====
+function getActive() { return queue.find(q => q.id === activeId) || null; }
+
+function renderMain() {
+  const a = getActive();
+  if (a) {
+    timeContent.textContent = formatTime(a.remainingMs);
+    const fraction = a.totalSec > 0
+      ? Math.min(1, Math.max(0, (a.totalSec * 1000 - a.remainingMs) / (a.totalSec * 1000)))
+      : 0;
+    progress.style.strokeDashoffset = CIRCUMFERENCE * (1 - fraction);
+    card.classList.toggle('timer-running', a.state === 'running');
+    card.classList.toggle('paused', a.state === 'paused');
+    card.classList.toggle('finished', a.state === 'completed');
+  } else {
+    timeContent.textContent = '0:00';
+    progress.style.strokeDashoffset = CIRCUMFERENCE;
+    card.classList.remove('timer-running', 'paused', 'finished');
+  }
+  totalValueEl.textContent = formatTotalTime(totalElapsedMs);
 }
 
-function render() {
-  timeContent.textContent = formatTime(remainingMs);
-  applyProgress();
-  startPauseBtn.innerHTML = isRunning ? ICONS.pause : ICONS.play;
-  card.classList.toggle('timer-running', isRunning);
-  card.classList.toggle('paused', isPaused);
-  card.classList.toggle('finished', isFinished);
+// ===== row rendering / state transitions =====
+function rowSeconds(row) {
+  const h = Math.min(9, parseInt(row.h_in.value, 10) || 0);
+  const m = Math.min(59, parseInt(row.m_in.value, 10) || 0);
+  const s = Math.min(59, parseInt(row.s_in.value, 10) || 0);
+  return h * 3600 + m * 60 + s;
 }
 
-// ===== timer control =====
-function start() {
-  if (remainingMs <= 0 || totalSeconds <= 0) return;
-  clearFinished();
-  isRunning = true;
-  isPaused = false;
-  runStartTimestamp = performance.now();
-  runStartRemainingMs = remainingMs;
+function setRowState(row, newState) {
+  row.state = newState;
+  // visual class
+  row.el.classList.remove('state-unconfirmed', 'state-confirmed', 'state-running', 'state-paused', 'state-completed');
+  row.el.classList.add('state-' + newState);
+
+  // inputs editable only in 'unconfirmed'
+  const editable = newState === 'unconfirmed';
+  [row.h_in, row.m_in, row.s_in].forEach(inp => {
+    inp.readOnly = !editable;
+    inp.disabled = !editable;
+  });
+
+  // action button label/icon
+  if (newState === 'unconfirmed') {
+    row.action.innerHTML = ICONS.tick;
+    row.action.setAttribute('aria-label', 'Confirm time');
+    row.action.disabled = false;
+  } else if (newState === 'confirmed' || newState === 'paused') {
+    row.action.innerHTML = ICONS.play;
+    row.action.setAttribute('aria-label', 'Start timer');
+    row.action.disabled = false;
+  } else if (newState === 'running') {
+    row.action.innerHTML = ICONS.pause;
+    row.action.setAttribute('aria-label', 'Pause timer');
+    row.action.disabled = false;
+  } else if (newState === 'completed') {
+    row.action.innerHTML = ICONS.play;
+    row.action.setAttribute('aria-label', 'Done');
+    row.action.disabled = true;
+  }
+}
+
+function renumberRows() {
+  queue.forEach((row, idx) => {
+    row.el.querySelector('.q-index').textContent = (idx + 1) + '.';
+  });
+  updateAddButton();
+}
+
+function updateAddButton() {
+  queueAddBtn.disabled = queue.length >= QUEUE_MAX;
+}
+
+function buildRow(initial = { h: 0, m: 0, s: 0 }) {
+  if (queue.length >= QUEUE_MAX) return null;
+  const id = ++nextId;
+  const el = document.createElement('li');
+  el.className = 'queue-row state-unconfirmed';
+  el.dataset.id = String(id);
+  el.innerHTML = `
+    <span class="q-index"></span>
+    <span class="q-time-group">
+      <input type="text" class="q-h" inputmode="numeric" maxlength="1" value="${initial.h}" aria-label="Hours">
+      <span class="q-colon">:</span>
+      <input type="text" class="q-m" inputmode="numeric" maxlength="2" value="${pad2(initial.m)}" aria-label="Minutes">
+      <span class="q-colon">:</span>
+      <input type="text" class="q-s" inputmode="numeric" maxlength="2" value="${pad2(initial.s)}" aria-label="Seconds">
+    </span>
+    <button class="q-action" type="button"></button>
+  `;
+  const h_in = el.querySelector('.q-h');
+  const m_in = el.querySelector('.q-m');
+  const s_in = el.querySelector('.q-s');
+  const action = el.querySelector('.q-action');
+  const row = { id, h: 0, m: 0, s: 0, totalSec: 0, remainingMs: 0, state: 'unconfirmed', el, h_in, m_in, s_in, action };
+  queue.push(row);
+  queueList.appendChild(el);
+  setRowState(row, 'unconfirmed');
+  renumberRows();
+  wireRow(row);
+  return row;
+}
+
+function wireRow(row) {
+  const fields = [row.h_in, row.m_in, row.s_in];
+  fields.forEach((inp, idx) => {
+    // single-click = caret only; double-click = select all
+    inp.addEventListener('dblclick', () => inp.select());
+    inp.addEventListener('input', () => {
+      const maxLen = inp.classList.contains('q-h') ? 1 : 2;
+      inp.value = inp.value.replace(/\D/g, '').slice(0, maxLen);
+      if (inp.value.length === maxLen && idx < fields.length - 1) {
+        fields[idx + 1].focus();
+      }
+    });
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); inp.blur(); confirmRow(row); }
+      else if (e.key === 'Backspace' && inp.value === '' && idx > 0) fields[idx - 1].focus();
+      else if (e.key === 'ArrowRight' && inp.selectionStart === inp.value.length && idx < fields.length - 1) { fields[idx + 1].focus(); fields[idx + 1].select(); }
+      else if (e.key === 'ArrowLeft' && inp.selectionStart === 0 && idx > 0) { fields[idx - 1].focus(); fields[idx - 1].select(); }
+    });
+  });
+  row.action.addEventListener('click', () => {
+    if (row.state === 'unconfirmed') confirmRow(row);
+    else if (row.state === 'confirmed' || row.state === 'paused') startRow(row);
+    else if (row.state === 'running') pauseRow(row);
+  });
+  // right-click → custom context menu with "Exit Timer"
+  row.el.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    openContextMenu(row.id, e.clientX, e.clientY);
+  });
+}
+
+function confirmRow(row) {
+  const total = rowSeconds(row);
+  if (total <= 0) return;       // do nothing for empty rows; user has to set a time first
+  row.totalSec = total;
+  row.remainingMs = total * 1000;
+  // pad inputs nicely for the locked display
+  row.h_in.value = String(Math.floor(total / 3600));
+  row.m_in.value = pad2(Math.floor((total % 3600) / 60));
+  row.s_in.value = pad2(total % 60);
+  setRowState(row, 'confirmed');
+}
+
+function startRow(row) {
+  if (row.totalSec <= 0) return;
+  // If another row is currently the active one, pause/clear it first
+  if (activeId !== null && activeId !== row.id) {
+    const prev = getActive();
+    if (prev && prev.state === 'running') doPauseActive();
+  }
+  activeId = row.id;
+  setRowState(row, 'running');
+  runStartTs = performance.now();
+  runStartRemMs = row.remainingMs;
+  if (tickerId) clearInterval(tickerId);
   tickerId = setInterval(tick, 50);
-  render();
+  renderMain();
+}
+
+function pauseRow(row) {
+  if (row.id !== activeId) return;
+  doPauseActive();
+}
+
+function doPauseActive() {
+  const a = getActive();
+  if (!a || a.state !== 'running') return;
+  // capture elapsed before stopping
+  const elapsed = performance.now() - runStartTs;
+  a.remainingMs = Math.max(0, runStartRemMs - elapsed);
+  totalElapsedMs += Math.min(elapsed, runStartRemMs);
+  runStartRemMs = a.remainingMs;
+  if (tickerId) clearInterval(tickerId);
+  tickerId = null;
+  setRowState(a, 'paused');
+  renderMain();
 }
 
 function tick() {
-  const elapsed = performance.now() - runStartTimestamp;
-  remainingMs = Math.max(0, runStartRemainingMs - elapsed);
-  if (remainingMs <= 0) {
-    remainingMs = 0;
-    stopTicker();
-    isRunning = false;
-    isPaused = false;
-    onFinish();
-    render();
-    return;
+  const a = getActive();
+  if (!a || a.state !== 'running') return;
+  const elapsed = performance.now() - runStartTs;
+  const newRemaining = Math.max(0, runStartRemMs - elapsed);
+  // accumulate total elapsed delta since last tick
+  const justElapsed = a.remainingMs - newRemaining;
+  if (justElapsed > 0) totalElapsedMs += justElapsed;
+  a.remainingMs = newRemaining;
+  if (newRemaining <= 0) {
+    a.remainingMs = 0;
+    clearInterval(tickerId);
+    tickerId = null;
+    setRowState(a, 'completed');
+    playAlarm();
   }
-  // micro-render: skip full render to keep things smooth
-  timeContent.textContent = formatTime(remainingMs);
-  applyProgress();
+  renderMain();
 }
 
-function stopTicker() {
-  if (tickerId) clearInterval(tickerId);
-  tickerId = null;
-}
-
-function pause() {
-  if (!isRunning) return;
-  stopTicker();
-  isRunning = false;
-  isPaused = true;
-  render();
-}
-
-function reset() {
-  stopTicker();
-  isRunning = false;
-  isPaused = false;
-  clearFinished();
-  remainingMs = totalSeconds * 1000;
-  // Reset clears the "active" highlight on the queue row but keeps completed marks intact.
-  if (activeQueueIdx >= 0 && queueRows[activeQueueIdx]) {
-    queueRows[activeQueueIdx].row.classList.remove('active');
-    activeQueueIdx = -1;
+function deleteRow(rowId) {
+  const idx = queue.findIndex(r => r.id === rowId);
+  if (idx === -1) return;
+  if (queue.length <= QUEUE_MIN) return;   // can't go below 1
+  const row = queue[idx];
+  if (row.id === activeId) {
+    // cancel any running timer first
+    if (tickerId) clearInterval(tickerId);
+    tickerId = null;
+    activeId = null;
+    stopAlarm();
   }
-  // Snap the ring back instantly — no slow rewind animation.
-  // Disable transition, apply the empty-ring offset, force a reflow, then restore the transition.
-  const prevTransition = progress.style.transition;
-  progress.style.transition = 'none';
-  applyProgress();
-  void progress.getBoundingClientRect();
-  progress.style.transition = prevTransition;
-  render();
+  row.el.remove();
+  queue.splice(idx, 1);
+  renumberRows();
+  renderMain();
 }
 
-function onFinish() {
-  isFinished = true;
-  isPaused = false;
-  markActiveQueueComplete();
-  playAlarm();
+// ===== context menu =====
+function openContextMenu(rowId, x, y) {
+  const row = queue.find(r => r.id === rowId);
+  if (!row) return;
+  ctxTargetId = rowId;
+  // hide if it's the only row left (can't go below min)
+  ctxDelete.disabled = queue.length <= QUEUE_MIN;
+  ctxMenu.hidden = false;
+  // clamp position to viewport
+  const menuW = 160, menuH = 50;
+  const px = Math.min(x, window.innerWidth - menuW - 8);
+  const py = Math.min(y, window.innerHeight - menuH - 8);
+  ctxMenu.style.left = px + 'px';
+  ctxMenu.style.top = py + 'px';
 }
 
-function clearFinished() {
-  if (!isFinished) return;
-  isFinished = false;
-  stopAlarm();
-  render(); // ensure the .finished class is removed immediately
+function closeContextMenu() {
+  ctxMenu.hidden = true;
+  ctxTargetId = null;
 }
 
-// ===== editing =====
-function enterEditMode() {
-  if (isRunning) return;
-  editMode = true;
-  clearFinished();
+ctxDelete.addEventListener('click', () => {
+  if (ctxTargetId !== null) deleteRow(ctxTargetId);
+  closeContextMenu();
+});
 
-  const totalSec = Math.max(0, Math.ceil(remainingMs / 1000));
-  inputs.h.value = String(Math.min(9, Math.floor(totalSec / 3600)));
-  inputs.m.value = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
-  inputs.s.value = String(totalSec % 60).padStart(2, '0');
+// Dismiss the menu when the user clicks elsewhere or presses Escape
+document.addEventListener('mousedown', (e) => {
+  if (ctxMenu.hidden) return;
+  if (e.target.closest('.ctx-menu')) return;
+  closeContextMenu();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !ctxMenu.hidden) closeContextMenu();
+});
 
-  timeView.hidden = true;
-  timeEdit.hidden = false;
-  const focusTarget = inputs.h.value !== '00' ? inputs.h
-                    : inputs.m.value !== '00' ? inputs.m
-                    : inputs.m;
-  focusTarget.focus();
-  focusTarget.select();
-}
+// ===== alarm (Web Audio, bell-like to approximate Google's chime) =====
+let audioCtx = null;
+let alarmIntervalId = null;
 
-function commitEdit() {
-  const h = Math.min(9, parseInt(inputs.h.value, 10) || 0);
-  const m = parseInt(inputs.m.value, 10) || 0;
-  const s = parseInt(inputs.s.value, 10) || 0;
-  totalSeconds = Math.min(9 * 3600 + 59 * 60 + 59, h * 3600 + m * 60 + s);
-  remainingMs = totalSeconds * 1000;
-  // Setting a new total means we've made no progress yet — reset paused state too.
-  isPaused = false;
-}
-
-function exitEditMode(commit = true) {
-  if (!editMode) return;
-  if (commit) commitEdit();
-  editMode = false;
-  timeEdit.hidden = true;
-  timeView.hidden = false;
-  render();
-}
-
-// ===== alarm (sound is always on now; no mute) =====
 function ensureAudio() {
   if (!audioCtx) {
     const Ctor = window.AudioContext || window.webkitAudioContext;
@@ -211,31 +326,40 @@ function ensureAudio() {
   return audioCtx;
 }
 
+// Approximation of the Google timer alarm: two bright bell pings (rising pair),
+// short attack, long-tailed exponential decay, with a softer overtone for bell colour.
+function bellPing(ctx, when, baseFreq, gain = 0.4) {
+  const harmonics = [
+    { ratio: 1.0,  level: 1.0 },
+    { ratio: 2.0,  level: 0.45 },
+    { ratio: 3.01, level: 0.18 }
+  ];
+  harmonics.forEach(h => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(baseFreq * h.ratio, when);
+    g.gain.setValueAtTime(0, when);
+    g.gain.linearRampToValueAtTime(gain * h.level, when + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.001, when + 1.6);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(when);
+    osc.stop(when + 1.7);
+  });
+}
+
 function beepOnce() {
   const ctx = ensureAudio();
   const now = ctx.currentTime;
-  const tones = [
-    { freq: 880,  start: 0,    dur: 0.18 },
-    { freq: 1175, start: 0.20, dur: 0.22 }
-  ];
-  tones.forEach(t => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = t.freq;
-    gain.gain.setValueAtTime(0, now + t.start);
-    gain.gain.linearRampToValueAtTime(0.35, now + t.start + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + t.start + t.dur);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start(now + t.start);
-    osc.stop(now + t.start + t.dur + 0.02);
-  });
+  // Two-note "ding-ding" pattern with the second slightly higher — Google-timer-ish
+  bellPing(ctx, now,        1200, 0.36);
+  bellPing(ctx, now + 0.28, 1500, 0.32);
 }
 
 function playAlarm() {
   stopAlarm();
   beepOnce();
-  alarmIntervalId = setInterval(beepOnce, 1200);
+  alarmIntervalId = setInterval(beepOnce, 1500);
 }
 
 function stopAlarm() {
@@ -243,274 +367,42 @@ function stopAlarm() {
   alarmIntervalId = null;
 }
 
-// ===== events =====
-timeView.addEventListener('click', enterEditMode);
-timeView.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') {
-    e.preventDefault();
-    enterEditMode();
-  }
+// ===== add-row button =====
+queueAddBtn.addEventListener('click', () => {
+  if (queue.length >= QUEUE_MAX) return;
+  const row = buildRow();
+  if (row) row.h_in.focus();
 });
 
-inputList.forEach((inp, idx) => {
-  // Standard text-editing behaviour:
-  //   single click → caret positions at the click point, nothing selected
-  //   double click → selects all digits in the field
-  // (We do NOT auto-select on focus, because mouse-focusing fires focus before the
-  //  browser positions the caret, which collides with the "single click = caret only"
-  //  expectation. Keyboard nav handlers still call .select() explicitly where needed.)
-  inp.addEventListener('dblclick', () => inp.select());
-  inp.addEventListener('input', () => {
-    const maxLen = inp.id === 'hours' ? 1 : 2;
-    inp.value = inp.value.replace(/\D/g, '').slice(0, maxLen);
-    if (inp.value.length === maxLen && idx < inputList.length - 1) {
-      inputList[idx + 1].focus();
-      inputList[idx + 1].select();
-    }
-  });
-  inp.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      exitEditMode(true);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      exitEditMode(false);
-    } else if (e.key === 'Tab' && !e.shiftKey && idx === inputList.length - 1) {
-      e.preventDefault();
-      exitEditMode(true);
-    } else if (e.key === 'Backspace' && inp.value === '' && idx > 0) {
-      inputList[idx - 1].focus();
-    } else if (e.key === 'ArrowRight' && inp.selectionStart === inp.value.length && idx < inputList.length - 1) {
-      inputList[idx + 1].focus();
-      inputList[idx + 1].select();
-    } else if (e.key === 'ArrowLeft' && inp.selectionStart === 0 && idx > 0) {
-      inputList[idx - 1].focus();
-      inputList[idx - 1].select();
-    }
-  });
-});
-
-timeEdit.addEventListener('focusout', () => {
-  setTimeout(() => {
-    if (editMode && !timeEdit.contains(document.activeElement)) {
-      exitEditMode(true);
-    }
-  }, 0);
-});
-
-startPauseBtn.addEventListener('click', () => {
-  if (editMode) exitEditMode(true);
-  if (isFinished) {
-    clearFinished();
-    return;
-  }
-  if (isRunning) pause();
-  else start();
-});
-
-resetBtn.addEventListener('click', () => {
-  if (editMode) exitEditMode(false);
-  reset();
-});
-
+// ===== fullscreen =====
 fullscreenBtn.addEventListener('click', async () => {
-  if (window.electronAPI) {
-    await window.electronAPI.toggleFullscreen();
-  } else if (document.fullscreenElement) {
-    document.exitFullscreen();
-  } else {
-    document.documentElement.requestFullscreen?.();
-  }
+  if (window.electronAPI) await window.electronAPI.toggleFullscreen();
+  else if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen?.();
 });
-
 if (window.electronAPI?.onFullscreenChanged) {
   window.electronAPI.onFullscreenChanged((isFs) => {
     fullscreenBtn.innerHTML = isFs ? ICONS.fullscreenExit : ICONS.fullscreen;
   });
 }
 
-// global keyboard shortcuts (no longer includes M for mute)
+// ===== global shortcuts =====
 document.addEventListener('keydown', (e) => {
-  if (editMode) return;
   const tag = (e.target?.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea') return;
-
-  if (e.key === ' ' || e.code === 'Space') {
+  if (e.key === 'f' || e.key === 'F') { e.preventDefault(); fullscreenBtn.click(); }
+  else if (e.key === ' ' || e.code === 'Space') {
+    // Space = play/pause the active row if there is one
     e.preventDefault();
-    if (isFinished) { clearFinished(); return; }
-    if (isRunning) pause(); else start();
-  } else if (e.key === 'r' || e.key === 'R') {
-    e.preventDefault();
-    reset();
-  } else if (e.key === 'f' || e.key === 'F') {
-    e.preventDefault();
-    fullscreenBtn.click();
-  } else if (e.key === 'Escape') {
-    if (isFinished) clearFinished();
-  } else if (e.key === 'Enter') {
-    e.preventDefault();
-    enterEditMode();
+    const a = getActive();
+    if (!a) return;
+    if (a.state === 'running') pauseRow(a);
+    else if (a.state === 'confirmed' || a.state === 'paused') startRow(a);
+    else if (a.state === 'completed') { stopAlarm(); /* dismiss */ }
   }
 });
 
-// ===== queue =====
-function buildQueue() {
-  const frag = document.createDocumentFragment();
-  for (let i = 0; i < QUEUE_LENGTH; i++) {
-    const row = document.createElement('li');
-    row.className = 'queue-row';
-    row.dataset.index = String(i);
-    // Inputs wrapped in .q-time-group so themes can lay them out as a unit
-    // (e.g. dashboard layout stacks index / time / play vertically)
-    row.innerHTML = `
-      <span class="q-drag-handle" draggable="true" title="Drag to reorder" aria-label="Drag to reorder">${ICONS.dragHandle}</span>
-      <span class="q-index">${i + 1}.</span>
-      <span class="q-time-group">
-        <input type="text" class="q-h" inputmode="numeric" maxlength="1" placeholder="0" aria-label="Queue ${i+1} hours">
-        <span class="q-colon">:</span>
-        <input type="text" class="q-m" inputmode="numeric" maxlength="2" placeholder="00" aria-label="Queue ${i+1} minutes">
-        <span class="q-colon">:</span>
-        <input type="text" class="q-s" inputmode="numeric" maxlength="2" placeholder="00" aria-label="Queue ${i+1} seconds">
-      </span>
-      <button class="q-play" aria-label="Run timer ${i+1}">${ICONS.play}</button>
-    `;
-    const h = row.querySelector('.q-h');
-    const m = row.querySelector('.q-m');
-    const s = row.querySelector('.q-s');
-    const play = row.querySelector('.q-play');
-    const fields = [h, m, s];
-
-    // numeric-only + auto-advance, same UX as main edit mode
-    fields.forEach((inp, idx) => {
-      const maxLen = inp.classList.contains('q-h') ? 1 : 2;
-      // Single click → caret only; double click → select all digits.
-      inp.addEventListener('dblclick', () => inp.select());
-      inp.addEventListener('input', () => {
-        inp.value = inp.value.replace(/\D/g, '').slice(0, maxLen);
-        // typing in a completed row re-activates it
-        if (row.classList.contains('completed')) {
-          row.classList.remove('completed');
-        }
-        if (inp.value.length === maxLen && idx < fields.length - 1) {
-          fields[idx + 1].focus();
-          fields[idx + 1].select();
-        }
-      });
-      inp.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          inp.blur();
-          startQueueRow(i);
-        } else if (e.key === 'Backspace' && inp.value === '' && idx > 0) {
-          fields[idx - 1].focus();
-        } else if (e.key === 'ArrowRight' && inp.selectionStart === inp.value.length && idx < fields.length - 1) {
-          fields[idx + 1].focus();
-          fields[idx + 1].select();
-        } else if (e.key === 'ArrowLeft' && inp.selectionStart === 0 && idx > 0) {
-          fields[idx - 1].focus();
-          fields[idx - 1].select();
-        }
-      });
-    });
-
-    play.addEventListener('click', () => startQueueRow(i));
-
-    // ---- drag-to-reorder ----
-    const handle = row.querySelector('.q-drag-handle');
-    handle.addEventListener('dragstart', (e) => {
-      draggedRow = row;
-      row.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', '');
-      // Use the whole row as the drag image, not just the small handle icon
-      try { e.dataTransfer.setDragImage(row, 20, row.offsetHeight / 2); } catch {}
-    });
-    handle.addEventListener('dragend', () => {
-      row.classList.remove('dragging');
-      draggedRow = null;
-      rebuildQueueArrayFromDOM();
-    });
-    row.addEventListener('dragover', (e) => {
-      if (!draggedRow || draggedRow === row) return;
-      e.preventDefault();
-      const rect = row.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-      if (e.clientY < midY) {
-        row.parentNode.insertBefore(draggedRow, row);
-      } else {
-        row.parentNode.insertBefore(draggedRow, row.nextSibling);
-      }
-    });
-
-    queueRows.push({ row, h, m, s, play, completed: false });
-    frag.appendChild(row);
-  }
-  queueList.appendChild(frag);
-}
-
-// After a drag finishes, the DOM order has changed.
-// Re-sync the queueRows JS array, the visible "1./2./3." labels, and the active index.
-function rebuildQueueArrayFromDOM() {
-  const domRows = Array.from(queueList.children);
-  const reordered = [];
-  domRows.forEach((domRow, newIdx) => {
-    const item = queueRows.find(r => r.row === domRow);
-    if (item) reordered.push(item);
-    const indexLabel = domRow.querySelector('.q-index');
-    if (indexLabel) indexLabel.textContent = (newIdx + 1) + '.';
-  });
-  queueRows.length = 0;
-  queueRows.push(...reordered);
-  // Active row keeps its visual highlight; re-find its new index so subsequent finish/reset logic works.
-  const activeRow = document.querySelector('.queue-row.active');
-  activeQueueIdx = activeRow ? queueRows.findIndex(r => r.row === activeRow) : -1;
-}
-
-function readQueueRowSeconds(idx) {
-  const r = queueRows[idx];
-  if (!r) return 0;
-  const h = Math.min(9, parseInt(r.h.value, 10) || 0);
-  const m = parseInt(r.m.value, 10) || 0;
-  const s = parseInt(r.s.value, 10) || 0;
-  return Math.min(9 * 3600 + 59 * 60 + 59, h * 3600 + m * 60 + s);
-}
-
-function setActiveQueueIndex(idx) {
-  queueRows.forEach((r, i) => r.row.classList.toggle('active', i === idx));
-  activeQueueIdx = idx;
-}
-
-function markActiveQueueComplete() {
-  if (activeQueueIdx < 0) return;
-  const r = queueRows[activeQueueIdx];
-  if (r) {
-    r.completed = true;
-    r.row.classList.add('completed');
-    r.row.classList.remove('active');
-  }
-  activeQueueIdx = -1;
-}
-
-function startQueueRow(idx) {
-  const total = readQueueRowSeconds(idx);
-  if (total <= 0) return;
-
-  // If the row was previously marked complete, un-complete it (user is re-running it)
-  queueRows[idx].row.classList.remove('completed');
-  queueRows[idx].completed = false;
-
-  // Hand the duration to the main timer state and start
-  if (editMode) exitEditMode(false);
-  stopTicker();
-  clearFinished();
-  totalSeconds = total;
-  remainingMs = total * 1000;
-  setActiveQueueIndex(idx);
-  start();
-}
-
-// init icons + queue + first render
+// ===== init =====
 fullscreenBtn.innerHTML = ICONS.fullscreen;
-resetBtn.innerHTML = ICONS.reset;
-buildQueue();
-render();
+buildRow();   // start with exactly one empty unconfirmed row
+renderMain();
