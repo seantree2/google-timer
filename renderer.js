@@ -390,19 +390,16 @@ function dismissAlarmIfActive() {
   }
 }
 
-// Move activeId to the next non-completed row after the current one. If
-// there are none, clear activeId.
+// Advance activeId ONLY if the immediate next row in the queue is confirmed.
+// If that row is unconfirmed (or there's no row at all), clear activeId — the
+// main view goes idle and the user has to deal with the unconfirmed slot
+// before anything plays. Strict sequential: never skip ahead to find a
+// confirmed row a few positions later.
 function advanceToNextInLine() {
   if (activeId === null) return;
   const currentIdx = queue.findIndex(r => r.id === activeId);
-  let nextRow = null;
-  for (let i = currentIdx + 1; i < queue.length; i++) {
-    if (queue[i].state !== 'completed') {
-      nextRow = queue[i];
-      break;
-    }
-  }
-  activeId = nextRow ? nextRow.id : null;
+  const nextRow = queue[currentIdx + 1];
+  activeId = (nextRow && nextRow.state === 'confirmed') ? nextRow.id : null;
   renderMain();
 }
 
