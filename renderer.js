@@ -331,7 +331,7 @@ document.addEventListener('keydown', (e) => {
 // Resolve relative to renderer.js itself so the path works whether loaded from
 // the main app's index.html or from /mockups/theme-d/index.html.
 const SCRIPT_BASE = new URL('.', document.currentScript.src).href;
-const ALARM_AUDIO_URL = SCRIPT_BASE + 'sounds/google-chime.mp4';
+const ALARM_AUDIO_URL = SCRIPT_BASE + 'sounds/google-chime.mp3';
 const alarmAudio = new Audio(ALARM_AUDIO_URL);
 alarmAudio.loop = true;
 alarmAudio.preload = 'auto';
