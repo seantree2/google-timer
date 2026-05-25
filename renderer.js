@@ -165,7 +165,13 @@ function buildRow(initial = { h: 0, m: 0, s: 0 }) {
 function wireRow(row) {
   const fields = [row.h_in, row.m_in, row.s_in];
   fields.forEach((inp, idx) => {
-    // single-click = caret only; double-click = select all
+    // If the field still shows the default 0/00, select all on focus so the user
+    // can just start typing and the zeros are displaced. For any non-zero value
+    // the user has already typed in, clicking just positions the caret (per spec).
+    inp.addEventListener('focus', () => {
+      if (/^0+$/.test(inp.value)) inp.select();
+    });
+    // Double-click always selects all regardless of current value.
     inp.addEventListener('dblclick', () => inp.select());
     inp.addEventListener('input', () => {
       const maxLen = inp.classList.contains('q-h') ? 1 : 2;
