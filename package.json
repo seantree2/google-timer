@@ -62,7 +62,8 @@
       "preload.js",
       "index.html",
       "renderer.js",
-      "styles.css"
+      "styles.css",
+      "sounds/**/*"
     ]
   }
 }

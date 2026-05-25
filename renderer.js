@@ -328,11 +328,22 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !ctxMenu.hidden) closeContextMenu();
 });
 
-// ===== alarm (Web Audio, bell-like to approximate Google's chime) =====
-let audioCtx = null;
-let alarmIntervalId = null;
+// ===== alarm =====
+// Primary: the bundled Google-search timer recording, looping until dismissed.
+// Fallback: a synthesized bell (used only if the audio file fails to load/play).
 
-function ensureAudio() {
+// Resolve relative to renderer.js itself, so the path works whether loaded from
+// the main app's index.html or from /mockups/theme-d/index.html.
+const SCRIPT_BASE = new URL('.', document.currentScript.src).href;
+const ALARM_AUDIO_URL = SCRIPT_BASE + 'sounds/google-chime.mp4';
+const alarmAudio = new Audio(ALARM_AUDIO_URL);
+alarmAudio.loop = true;
+alarmAudio.preload = 'auto';
+
+let alarmIntervalId = null;       // only used by the synth fallback
+let audioCtx = null;
+
+function ensureAudioCtx() {
   if (!audioCtx) {
     const Ctor = window.AudioContext || window.webkitAudioContext;
     audioCtx = new Ctor();
@@ -341,15 +352,9 @@ function ensureAudio() {
   return audioCtx;
 }
 
-// Approximation of the Google timer alarm: two bright bell pings (rising pair),
-// short attack, long-tailed exponential decay, with a softer overtone for bell colour.
-function bellPing(ctx, when, baseFreq, gain = 0.4) {
-  const harmonics = [
-    { ratio: 1.0,  level: 1.0 },
-    { ratio: 2.0,  level: 0.45 },
-    { ratio: 3.01, level: 0.18 }
-  ];
-  harmonics.forEach(h => {
+// Synth fallback — same bell-pings used previously, in case the audio file fails.
+function fallbackBellPing(ctx, when, baseFreq, gain = 0.4) {
+  [{ ratio: 1.0, level: 1.0 }, { ratio: 2.0, level: 0.45 }, { ratio: 3.01, level: 0.18 }].forEach(h => {
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
     osc.type = 'sine';
@@ -362,25 +367,36 @@ function bellPing(ctx, when, baseFreq, gain = 0.4) {
     osc.stop(when + 1.7);
   });
 }
-
-function beepOnce() {
-  const ctx = ensureAudio();
+function fallbackBeep() {
+  const ctx = ensureAudioCtx();
   const now = ctx.currentTime;
-  // Two-note "ding-ding" pattern with the second slightly higher — Google-timer-ish
-  bellPing(ctx, now,        1200, 0.36);
-  bellPing(ctx, now + 0.28, 1500, 0.32);
+  fallbackBellPing(ctx, now,        1200, 0.36);
+  fallbackBellPing(ctx, now + 0.28, 1500, 0.32);
+}
+function startFallback() {
+  fallbackBeep();
+  alarmIntervalId = setInterval(fallbackBeep, 1500);
 }
 
 function playAlarm() {
   stopAlarm();
-  beepOnce();
-  alarmIntervalId = setInterval(beepOnce, 1500);
+  // Try the bundled audio file first; fall back to synth if it can't play.
+  alarmAudio.currentTime = 0;
+  const p = alarmAudio.play();
+  if (p && typeof p.then === 'function') {
+    p.catch((err) => {
+      console.warn('[timer] alarm audio failed, using synth fallback:', err?.message || err);
+      startFallback();
+    });
+  }
 }
 
 function stopAlarm() {
+  // Stop the recording
+  try { alarmAudio.pause(); alarmAudio.currentTime = 0; } catch {}
+  // Stop the synth fallback if it was running
   if (alarmIntervalId) clearInterval(alarmIntervalId);
   alarmIntervalId = null;
-  // Auto-stop also clears the "alarming" visual state on the card
   card.classList.remove('alarming');
 }
 
