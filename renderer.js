@@ -139,6 +139,8 @@ function setRowState(row, newState) {
     row.action.setAttribute('aria-label', 'Done');
     row.action.disabled = true;
   }
+  // Recompute sequential locks now that this row's state has changed.
+  updateLockedRows();
 }
 
 function renumberRows() {
@@ -147,6 +149,26 @@ function renumberRows() {
   });
   updateAddButton();
   updateQueueRowHeights();
+  updateLockedRows();
+}
+
+// Strict sequential play: only the first non-completed row's play button is
+// usable. Any later state-confirmed row's button is locked (faded, no clicks)
+// until earlier rows finish or are deleted. Unconfirmed rows keep their tick
+// active so users can set times anywhere in the queue without restriction.
+function updateLockedRows() {
+  let foundFirstNonCompleted = false;
+  queue.forEach((row) => {
+    row.el.classList.remove('is-locked');
+    if (row.state === 'completed') return;
+    if (!foundFirstNonCompleted) {
+      foundFirstNonCompleted = true;
+      return;
+    }
+    if (row.state === 'confirmed') {
+      row.el.classList.add('is-locked');
+    }
+  });
 }
 
 function updateAddButton() {

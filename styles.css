@@ -233,12 +233,11 @@ html, body {
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.32);
 }
 
-/* While a timer is ACTIVE (running OR paused), the play buttons on OTHER
-   confirmed rows are disabled so the user can't accidentally interrupt the
-   selected timer. The active row's pause/resume button stays clickable,
-   and unconfirmed rows' tick buttons remain clickable too. */
-.queue-list:has(.queue-row.state-running) .queue-row.state-confirmed .q-action,
-.queue-list:has(.queue-row.state-paused)  .queue-row.state-confirmed .q-action {
+/* Strict sequential ordering: only the first non-completed row's play button
+   is usable. Any later state-confirmed row is locked (faded, no clicks) so
+   the queue must be played in order. The is-locked class is applied by
+   updateLockedRows() in renderer.js. */
+.queue-row.is-locked .q-action {
   pointer-events: none;
   opacity: 0.35;
 }
