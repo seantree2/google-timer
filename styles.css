@@ -232,6 +232,16 @@ html, body {
   background: #128238;
 }
 
+/* When the timer is paused, ONLY the actively-selected row's action button
+   matches the main timer's yellow accent — so the two pause controls look
+   coordinated. All other rows stay orange. */
+.timer-card.paused .queue-row.state-paused .q-action {
+  background: var(--accent);
+}
+.timer-card.paused .queue-row.state-paused .q-action:hover {
+  background: var(--accent-dark);
+}
+
 /* Circular "+" button at the bottom of the queue. Always Strava orange —
    doesn't follow the timer-card's state palette (yellow when paused, red
    when finished). It's a queue control, not a status indicator. */
