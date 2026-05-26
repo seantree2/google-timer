@@ -347,10 +347,13 @@ function pauseRow(row) {
 function doPauseActive() {
   const a = getActive();
   if (!a || a.state !== 'running') return;
-  // capture elapsed before stopping
+  // Account for the time elapsed since the LAST tick (not the entire run —
+  // tick() has already been incrementally adding to totalElapsedMs throughout).
   const elapsed = performance.now() - runStartTs;
-  a.remainingMs = Math.max(0, runStartRemMs - elapsed);
-  totalElapsedMs += Math.min(elapsed, runStartRemMs);
+  const newRemaining = Math.max(0, runStartRemMs - elapsed);
+  const justElapsed = a.remainingMs - newRemaining;
+  if (justElapsed > 0) totalElapsedMs += justElapsed;
+  a.remainingMs = newRemaining;
   runStartRemMs = a.remainingMs;
   if (tickerId) clearInterval(tickerId);
   tickerId = null;
