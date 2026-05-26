@@ -307,8 +307,19 @@ function confirmRow(row) {
   row.m_in.value = pad2(Math.floor((total % 3600) / 60));
   row.s_in.value = pad2(total % 60);
   setRowState(row, 'confirmed');
-  // If this row is the one featured in the main view, refresh it so the
-  // freshly-set duration shows immediately.
+
+  // If nothing is currently active AND this row is the next-in-line
+  // (the first non-completed row in the queue), feature it in the main view
+  // so the user can press play from there. Strict-sequential is preserved:
+  // confirming a row deeper in the queue while earlier slots are still
+  // pending doesn't hijack the main view.
+  if (activeId === null) {
+    const firstNonCompleted = queue.find(r => r.state !== 'completed');
+    if (firstNonCompleted && firstNonCompleted.id === row.id) {
+      activeId = row.id;
+    }
+  }
+
   if (row.id === activeId) renderMain();
 }
 
