@@ -36,8 +36,23 @@ let   activeId       = null;              // id of the row whose timer is curren
 let   tickerId       = null;
 let   runStartTs     = 0;
 let   runStartRemMs  = 0;
-let   totalElapsedMs = 0;                 // running total across every confirmed queue run
 let   ctxTargetId    = null;              // id of the row the context menu is currently anchored to
+
+// Total time is DERIVED on-demand from the queue's current state (sum of each
+// row's elapsed portion). No accumulator — guaranteed correct, no drift, no
+// double-count possible regardless of pause/resume behaviour.
+function computeTotalElapsedMs() {
+  let total = 0;
+  for (const row of queue) {
+    if (row.state === 'completed') {
+      total += row.totalSec * 1000;
+    } else if (row.state === 'running' || row.state === 'paused') {
+      total += Math.max(0, row.totalSec * 1000 - row.remainingMs);
+    }
+    // confirmed (not started) and unconfirmed contribute 0
+  }
+  return total;
+}
 
 // ===== utility =====
 function pad2(n) { return String(n).padStart(2, '0'); }
@@ -97,7 +112,7 @@ function renderMain() {
     startPauseBtn.disabled = true;
     startPauseBtn.setAttribute('aria-label', 'No active timer');
   }
-  totalValueEl.textContent = formatTotalTime(totalElapsedMs);
+  totalValueEl.textContent = formatTotalTime(computeTotalElapsedMs());
 }
 
 // ===== row rendering / state transitions =====
@@ -358,13 +373,10 @@ function pauseRow(row) {
 function doPauseActive() {
   const a = getActive();
   if (!a || a.state !== 'running') return;
-  // Account for the time elapsed since the LAST tick (not the entire run —
-  // tick() has already been incrementally adding to totalElapsedMs throughout).
+  // Just capture the current remaining time; total is derived from the queue's
+  // state via computeTotalElapsedMs() so there's nothing to accumulate here.
   const elapsed = performance.now() - runStartTs;
-  const newRemaining = Math.max(0, runStartRemMs - elapsed);
-  const justElapsed = a.remainingMs - newRemaining;
-  if (justElapsed > 0) totalElapsedMs += justElapsed;
-  a.remainingMs = newRemaining;
+  a.remainingMs = Math.max(0, runStartRemMs - elapsed);
   runStartRemMs = a.remainingMs;
   if (tickerId) clearInterval(tickerId);
   tickerId = null;
@@ -377,9 +389,6 @@ function tick() {
   if (!a || a.state !== 'running') return;
   const elapsed = performance.now() - runStartTs;
   const newRemaining = Math.max(0, runStartRemMs - elapsed);
-  // accumulate total elapsed delta since last tick
-  const justElapsed = a.remainingMs - newRemaining;
-  if (justElapsed > 0) totalElapsedMs += justElapsed;
   a.remainingMs = newRemaining;
   if (newRemaining <= 0) {
     a.remainingMs = 0;
