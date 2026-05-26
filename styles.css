@@ -195,6 +195,9 @@ html, body {
    accent colour mid-transition. */
 .q-action {
   margin-left: auto;
+  /* Tiny nudge inward from the row's right edge so the tick doesn't sit
+     flush against the panel boundary — reads as more balanced visually. */
+  margin-right: 4px;
   background: #16A34A;
   border: none;
   width: 34px; height: 34px; border-radius: 50%;
