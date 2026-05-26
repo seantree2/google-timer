@@ -243,20 +243,22 @@ html, body {
 }
 
 /* After the tick is pressed (row leaves the unconfirmed state), the row's
-   action button bounces away — squash, spring, wobble, gone — only the tick
-   exists in the queue UI. All subsequent play/pause control is via the main
-   view. Each segment uses its own easing so the bounce feels organic rather
-   than mechanical. */
+   action button springs in place a few times like a damped spring, then
+   fades out. Linear keyframes (with smooth cubic-bezier overall) so the
+   oscillation reads as natural physics rather than mechanical stutters. */
 @keyframes q-action-pop-out {
-  0%   { transform: scale(1);     opacity: 1; animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0); }
-  20%  { transform: scale(0.85);  opacity: 1; animation-timing-function: cubic-bezier(0.25, 0, 0.25, 1.5); }  /* squash, then leap up */
-  50%  { transform: scale(1.45);  opacity: 1; animation-timing-function: cubic-bezier(0.5, 0, 0.5, 1); }
-  72%  { transform: scale(1.05);  opacity: 1; animation-timing-function: cubic-bezier(0.25, 0, 0.5, 1); }      /* wobble back */
-  84%  { transform: scale(1.18);  opacity: 0.85; animation-timing-function: cubic-bezier(0.7, 0, 0.84, 0); }
-  100% { transform: scale(0);     opacity: 0; }
+  0%   { transform: scale(1);    opacity: 1; }
+  14%  { transform: scale(0.88); opacity: 1; }   /* squash — gathering energy */
+  32%  { transform: scale(1.32); opacity: 1; }   /* peak spring */
+  48%  { transform: scale(0.94); opacity: 1; }   /* damped undershoot */
+  62%  { transform: scale(1.08); opacity: 1; }   /* smaller bounce */
+  74%  { transform: scale(0.98); opacity: 1; }   /* even smaller */
+  84%  { transform: scale(1.02); opacity: 1; }   /* settling */
+  90%  { transform: scale(1);    opacity: 0.9; } /* at rest, begin fade */
+  100% { transform: scale(0);    opacity: 0; }   /* poof */
 }
 .queue-row:not(.state-unconfirmed) .q-action {
-  animation: q-action-pop-out 720ms forwards;
+  animation: q-action-pop-out 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
   pointer-events: none;
 }
 
