@@ -1,0 +1,19 @@
+/* Variant: COBALT BLUE
+   A classic royal/cobalt — the middle of the three blue shades. Confident
+   and saturated without veering into navy. Paused (yellow) and finished
+   (red) stay put; only the running accent changes. */
+
+@import url('../../styles.css');
+
+.theme-cobalt .timer-card {
+  --accent: #2563EB;                       /* blue-600, royal cobalt */
+  --accent-dark: #1D4ED8;                  /* blue-700 */
+  --accent-soft: rgba(37, 99, 235, 0.10);
+  --accent-shadow: rgba(37, 99, 235, 0.30);
+  --accent-shadow-soft: rgba(37, 99, 235, 0.20);
+  --bg-grad-3: #DBEAFE;                    /* blue-100 tint instead of warm */
+}
+
+.theme-cobalt .progress-ring {
+  filter: drop-shadow(0 8px 20px rgba(37, 99, 235, 0.18));
+}

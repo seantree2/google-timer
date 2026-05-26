@@ -1,0 +1,19 @@
+/* Variant: DEEP NAVY
+   The deepest of the three — a serious, focused navy. Reads as "deep work
+   mode" rather than the energy of bright sky blue. Paused (yellow) and
+   finished (red) stay put; only the running accent changes. */
+
+@import url('../../styles.css');
+
+.theme-navy .timer-card {
+  --accent: #1E3A8A;                       /* blue-900, deep navy */
+  --accent-dark: #172E6E;                  /* darker navy */
+  --accent-soft: rgba(30, 58, 138, 0.10);
+  --accent-shadow: rgba(30, 58, 138, 0.32);
+  --accent-shadow-soft: rgba(30, 58, 138, 0.22);
+  --bg-grad-3: #E0E7FF;                    /* indigo-100 tint instead of warm */
+}
+
+.theme-navy .progress-ring {
+  filter: drop-shadow(0 8px 20px rgba(30, 58, 138, 0.18));
+}

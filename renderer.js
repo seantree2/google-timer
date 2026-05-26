@@ -431,17 +431,23 @@ function dismissAlarmIfActive() {
   }
 }
 
-// Advance activeId ONLY if the immediate next row in the queue is confirmed.
-// If that row is unconfirmed (or there's no row at all), clear activeId — the
-// main view goes idle and the user has to deal with the unconfirmed slot
-// before anything plays. Strict sequential: never skip ahead to find a
-// confirmed row a few positions later.
+// Advance to the immediate next row in the queue. If that row is confirmed,
+// AUTO-START it — pressing stop on the alarm should hand off to the next
+// timer immediately, no second click on play required. If the next row is
+// unconfirmed (or there's no row), clear activeId — the main view goes idle
+// and the user has to deal with the unconfirmed slot before anything plays.
+// Strict sequential: never skip ahead to find a confirmed row a few positions
+// later.
 function advanceToNextInLine() {
   if (activeId === null) return;
   const currentIdx = queue.findIndex(r => r.id === activeId);
   const nextRow = queue[currentIdx + 1];
-  activeId = (nextRow && nextRow.state === 'confirmed') ? nextRow.id : null;
-  renderMain();
+  if (nextRow && nextRow.state === 'confirmed') {
+    startRow(nextRow);                // auto-runs and updates main view
+  } else {
+    activeId = null;
+    renderMain();
+  }
 }
 
 function deleteRow(rowId) {

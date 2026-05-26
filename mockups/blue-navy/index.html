@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Strava Timer — Deep Navy</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-navy">
+  <main class="timer-card">
+    <div class="drag-region"></div>
+
+    <aside class="queue-panel" aria-label="Timer queue">
+      <h2 class="section-title">Queue</h2>
+      <ol class="queue-list" id="queue-list"></ol>
+      <button class="q-add" id="q-add" type="button" aria-label="Add a timer" title="Add timer">+</button>
+    </aside>
+
+    <section class="timer-main">
+      <div class="top-bar">
+        <button class="icon-btn" id="fullscreen-btn" title="Full screen (F)" aria-label="Full screen"></button>
+      </div>
+
+      <h2 class="section-title timer-section-title">Timer · Deep Navy</h2>
+
+      <div class="timer-display">
+        <svg class="progress-ring" viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="ring-bg" cx="100" cy="100" r="92"></circle>
+          <circle class="ring-fg" cx="100" cy="100" r="92" id="progress"></circle>
+        </svg>
+        <div class="time-area">
+          <span class="time-text" id="time-content">0:00</span>
+        </div>
+      </div>
+
+      <div class="main-controls">
+        <button class="control-btn" id="start-pause-btn" type="button" aria-label="Start or pause"></button>
+      </div>
+
+      <div class="total-time">
+        <span class="total-label">Total time</span>
+        <span class="total-value" id="total-value">0:00</span>
+      </div>
+    </section>
+
+    <div class="ctx-menu" id="ctx-menu" hidden role="menu">
+      <button class="ctx-item" id="ctx-delete" type="button" role="menuitem">Delete Timer</button>
+    </div>
+  </main>
+
+  <script src="../../renderer.js"></script>
+</body>
+</html>
