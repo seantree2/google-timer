@@ -1,0 +1,90 @@
+/* Variant: BALLOON POP
+   The tick inflates with a slight side-to-side wobble (reads as balloon
+   physics), peaks just past its breaking point, then bursts in a single
+   frame. A bright flash halo radiates outward at the burst moment and a
+   handful of small green fragments scatter as the remnants. */
+
+@import url('../../styles.css');
+
+.anim-balloon .q-action {
+  position: relative;
+  overflow: visible;
+}
+
+/* Flash halo — invisible until the burst frame, then snaps bright and fades. */
+.anim-balloon .q-action::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  transform: scale(1);
+  pointer-events: none;
+}
+
+/* Six small green fragments anchored at the centre. When the pseudo-element
+   scales up, the box-shadow offsets multiply outward — the fragments fly
+   away from the burst point. Appears only after the pop, NOT during inflation. */
+.anim-balloon .q-action::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 3px; height: 3px;
+  margin: -1.5px 0 0 -1.5px;
+  border-radius: 50%;
+  background: #16A34A;
+  box-shadow:
+     14px  -8px 0 #16A34A,
+    -14px  -8px 0 #16A34A,
+      8px  14px 0 #16A34A,
+     -8px  14px 0 #16A34A,
+     16px   2px 0 #128238,
+    -16px   2px 0 #128238;
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+.anim-balloon .queue-row:not(.state-unconfirmed) .q-action {
+  animation: q-balloon-pop 600ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  pointer-events: none;
+}
+
+.anim-balloon .queue-row:not(.state-unconfirmed) .q-action::before {
+  animation: q-balloon-flash 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-balloon .queue-row:not(.state-unconfirmed) .q-action::after {
+  animation: q-balloon-fragments 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Inflation: grows from 1× to ~1.7× with a small side-to-side wobble for
+   balloon physics, then BURSTS in a single keyframe — the jump from 1.7×
+   to 0.4× in just 3% of the timeline is the visual pop. Already invisible
+   beyond that point. */
+@keyframes q-balloon-pop {
+  0%   { transform: scale(1)    rotate(0deg);   opacity: 1; }
+  18%  { transform: scale(1.18) rotate(-2deg);  opacity: 1; }
+  35%  { transform: scale(1.34) rotate(2deg);   opacity: 1; }
+  55%  { transform: scale(1.55) rotate(-1deg);  opacity: 1; }
+  62%  { transform: scale(1.7)  rotate(0deg);   opacity: 1; }   /* max stretch */
+  65%  { transform: scale(0.4)  rotate(0deg);   opacity: 0; }   /* POP! gone */
+  100% { transform: scale(0)    rotate(0deg);   opacity: 0; }
+}
+
+/* Flash halo — silent through inflation, then snaps bright at the burst
+   frame (~62%) and fades outward. */
+@keyframes q-balloon-flash {
+  0%,  58% { opacity: 0;    transform: scale(1); }
+  63%      { opacity: 1;    transform: scale(2.0); }
+  78%      { opacity: 0.55; transform: scale(2.6); }
+  100%     { opacity: 0;    transform: scale(3.2); }
+}
+
+/* Fragments — appear at the burst moment, then scatter outward and fade. */
+@keyframes q-balloon-fragments {
+  0%,  60% { opacity: 0;    transform: scale(0); }
+  68%      { opacity: 1;    transform: scale(1.2); }
+  100%     { opacity: 0;    transform: scale(3); }
+}
