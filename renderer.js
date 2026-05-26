@@ -4,6 +4,8 @@ const ICONS = {
   pause: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>',
   // checkmark/tick — thicker stroke style so it reads clearly on the green button
   tick:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+  // Square "stop" symbol for the queue-done state — solid filled square.
+  stop:  '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor"/></svg>',
   fullscreen:     '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>',
   fullscreenExit: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>'
 };
@@ -87,6 +89,9 @@ function getActive() { return queue.find(q => q.id === activeId) || null; }
 
 function renderMain() {
   const a = getActive();
+  // Only the queue-done branch keeps this class — clear it every render so it
+  // never sticks to a state where the button is actively interactive.
+  startPauseBtn.classList.remove('queue-done');
   if (a) {
     timeContent.textContent = formatTime(a.remainingMs, a.totalSec);
     const fraction = a.totalSec > 0
@@ -107,7 +112,8 @@ function renderMain() {
       startPauseBtn.disabled = false;
       startPauseBtn.setAttribute('aria-label', 'Start');
     } else {
-      // completed
+      // completed (only reached while the alarm is firing; the .alarming
+      // overlay hides the play button entirely)
       startPauseBtn.innerHTML = ICONS.play;
       startPauseBtn.disabled = true;
       startPauseBtn.setAttribute('aria-label', 'Done');
@@ -116,9 +122,23 @@ function renderMain() {
     timeContent.textContent = '0:00';
     progress.style.strokeDashoffset = CIRCUMFERENCE;
     card.classList.remove('timer-running', 'paused', 'finished');
-    startPauseBtn.innerHTML = ICONS.play;
-    startPauseBtn.disabled = true;
-    startPauseBtn.setAttribute('aria-label', 'No active timer');
+    // After a timer has expired and the user has tapped to dismiss, the main
+    // view goes idle (activeId = null) — but if at least one timer has already
+    // run to completion in this session, show an ORANGE stop-square instead of
+    // the grayed-out play icon. Visual indicator that the run is done without
+    // implying it can be replayed. The initial empty state (nothing ever run)
+    // keeps the muted play icon so it doesn't look like a finished queue.
+    const queueDone = queue.some(r => r.state === 'completed');
+    if (queueDone) {
+      startPauseBtn.innerHTML = ICONS.stop;
+      startPauseBtn.classList.add('queue-done');
+      startPauseBtn.disabled = true;
+      startPauseBtn.setAttribute('aria-label', 'Queue complete');
+    } else {
+      startPauseBtn.innerHTML = ICONS.play;
+      startPauseBtn.disabled = true;
+      startPauseBtn.setAttribute('aria-label', 'No active timer');
+    }
   }
   totalValueEl.textContent = formatTotalTime(computeTotalElapsedMs());
 }
@@ -144,23 +164,28 @@ function setRowState(row, newState) {
     inp.disabled = !editable;
   });
 
-  // action button label/icon
+  // The row's action button is ONLY meaningfully visible in the 'unconfirmed'
+  // state, where it's the green tick that confirms the time. The moment the
+  // row leaves unconfirmed, a CSS keyframe animation collapses the button to
+  // scale(0)/opacity(0) and `forwards` keeps it hidden — play/pause control
+  // lives on the main view from there onward. We deliberately DON'T swap the
+  // innerHTML to a play/pause icon for those states: keeping the tick in place
+  // ensures no play icon ever flashes mid-animation as the button collapses.
   if (newState === 'unconfirmed') {
     row.action.innerHTML = ICONS.tick;
     row.action.setAttribute('aria-label', 'Confirm time');
     row.action.disabled = false;
-  } else if (newState === 'confirmed' || newState === 'paused') {
-    row.action.innerHTML = ICONS.play;
-    row.action.setAttribute('aria-label', 'Start timer');
+  } else {
+    // Leave row.action.innerHTML alone — the tick stays put while the
+    // collapse animation runs. After that the button is invisible regardless.
+    if (newState === 'confirmed' || newState === 'paused') {
+      row.action.setAttribute('aria-label', 'Start timer');
+    } else if (newState === 'running') {
+      row.action.setAttribute('aria-label', 'Pause timer');
+    } else if (newState === 'completed') {
+      row.action.setAttribute('aria-label', 'Done');
+    }
     row.action.disabled = false;
-  } else if (newState === 'running') {
-    row.action.innerHTML = ICONS.pause;
-    row.action.setAttribute('aria-label', 'Pause timer');
-    row.action.disabled = false;
-  } else if (newState === 'completed') {
-    row.action.innerHTML = ICONS.play;
-    row.action.setAttribute('aria-label', 'Done');
-    row.action.disabled = true;
   }
   // Recompute sequential locks now that this row's state has changed.
   updateLockedRows();

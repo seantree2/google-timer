@@ -1,0 +1,59 @@
+/* Variant: IRIS DISSOLVE
+   The tick button "atomises" outward in a radial particle wave from the centre.
+   Concentric rings expand and fade beyond the button silhouette while the
+   button itself softens (blur), shrinks, and fades to nothing. */
+
+@import url('../../styles.css');
+
+/* The button needs position: relative so the ::before pseudo-element can
+   anchor the expanding ring pattern over (and beyond) its bounds. */
+.anim-iris .q-action {
+  position: relative;
+  overflow: visible;
+}
+
+/* The ::before is a fixed disc with a concentric-ring pattern (every 4px).
+   As it scales up and fades, it reads as the button "atomising" outward. */
+.anim-iris .q-action::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    repeating-radial-gradient(
+      circle at center,
+      var(--accent) 0 1.5px,
+      transparent 1.5px 4.5px
+    );
+  opacity: 0;
+  transform: scale(1);
+  /* The button is normally `overflow: hidden` (it's a circle) — but we set
+     overflow: visible above so the rings can spread past the disc. */
+}
+
+/* Trigger BOTH animations the moment the row leaves unconfirmed. The
+   default squash-spring-poof keyframes from the main stylesheet are
+   replaced here. */
+.anim-iris .queue-row:not(.state-unconfirmed) .q-action {
+  animation: q-iris-fade 720ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+.anim-iris .queue-row:not(.state-unconfirmed) .q-action::before {
+  animation: q-iris-rings 720ms cubic-bezier(0.16, 0.84, 0.44, 1) forwards;
+}
+
+@keyframes q-iris-fade {
+  0%   { transform: scale(1);    opacity: 1;    filter: blur(0); }
+  20%  { transform: scale(1.08); opacity: 0.95; filter: blur(0.5px); }
+  55%  { transform: scale(0.75); opacity: 0.35; filter: blur(2.5px); }
+  100% { transform: scale(0);    opacity: 0;    filter: blur(5px); }
+}
+
+@keyframes q-iris-rings {
+  0%   { opacity: 0;    transform: scale(1); }
+  15%  { opacity: 0.95; transform: scale(1.1); }
+  60%  { opacity: 0.5;  transform: scale(2.4); }
+  100% { opacity: 0;    transform: scale(3.6); }
+}

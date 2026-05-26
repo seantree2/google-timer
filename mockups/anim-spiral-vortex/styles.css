@@ -1,0 +1,52 @@
+/* Variant: SPIRAL VORTEX
+   The tick button rotates ~540° clockwise while shrinking into a point, like
+   water down a drain. A trailing dashed-ring pseudo-element spins behind it
+   one beat later to read as a vortex/whirl. */
+
+@import url('../../styles.css');
+
+.anim-vortex .q-action {
+  position: relative;
+  overflow: visible;
+}
+
+/* The trailing dashed ring sits just outside the button silhouette and spins
+   with its own keyframes, creating a swirling "drain" motion. */
+.anim-vortex .q-action::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px dashed var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(1) rotate(0deg);
+}
+
+.anim-vortex .queue-row:not(.state-unconfirmed) .q-action {
+  animation: q-vortex-spin 750ms cubic-bezier(0.55, 0, 0.85, 0.4) forwards;
+  pointer-events: none;
+}
+
+.anim-vortex .queue-row:not(.state-unconfirmed) .q-action::before {
+  animation: q-vortex-trail 750ms cubic-bezier(0.55, 0, 0.85, 0.4) forwards;
+}
+
+/* Button spins clockwise as it shrinks — a brief inflate kicks the rotation
+   off, then it whirls inward to a single point. Total rotation: ~540°
+   (1½ turns) which reads as a real vortex rather than a coy single spin. */
+@keyframes q-vortex-spin {
+  0%   { transform: scale(1)    rotate(0deg);   opacity: 1; }
+  15%  { transform: scale(1.12) rotate(40deg);  opacity: 1; }
+  55%  { transform: scale(0.55) rotate(300deg); opacity: 0.6; }
+  100% { transform: scale(0)    rotate(540deg); opacity: 0; }
+}
+
+/* Dashed trail ring spins in the OPPOSITE direction (counter-rotation reads
+   as turbulence) and expands slightly before fading. */
+@keyframes q-vortex-trail {
+  0%   { opacity: 0;    transform: scale(1)    rotate(0deg); }
+  20%  { opacity: 0.85; transform: scale(1.15) rotate(-90deg); }
+  60%  { opacity: 0.55; transform: scale(1.55) rotate(-260deg); }
+  100% { opacity: 0;    transform: scale(2.0)  rotate(-420deg); }
+}

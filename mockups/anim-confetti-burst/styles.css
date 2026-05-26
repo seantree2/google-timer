@@ -1,0 +1,99 @@
+/* Variant: CONFETTI BURST
+   The tick button briefly inflates, then "explodes" into ~14 small orange
+   particles spraying outward in a radial pattern as the button itself shrinks
+   to nothing. Built with two pseudo-element layers (::before, ::after), each
+   carrying multiple `box-shadow` dots so we get particle variety in size,
+   shade, and trajectory — all without any JS. */
+
+@import url('../../styles.css');
+
+.anim-confetti .q-action {
+  position: relative;
+  overflow: visible;
+}
+
+/* Layer 1 — primary particles (8 dots, full orange, larger radius) */
+.anim-confetti .q-action::before {
+  content: '';
+  position: absolute;
+  /* A 4px dot anchored at the centre of the button. */
+  top: 50%; left: 50%;
+  width: 4px; height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: var(--accent);
+  /* Eight peer dots radiating out from the centre point. When the entire
+     pseudo-element scales up, all box-shadow offsets scale with it, so the
+     dots burst outward together. */
+  box-shadow:
+     22px  0   0 var(--accent),
+    -22px  0   0 var(--accent),
+     0    22px 0 var(--accent),
+     0   -22px 0 var(--accent),
+     16px  16px 0 var(--accent),
+    -16px  16px 0 var(--accent),
+     16px -16px 0 var(--accent),
+    -16px -16px 0 var(--accent);
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+/* Layer 2 — secondary particles (6 dots, darker shade, offset trajectory) */
+.anim-confetti .q-action::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 3px; height: 3px;
+  margin: -1.5px 0 0 -1.5px;
+  border-radius: 50%;
+  background: var(--accent-dark);
+  box-shadow:
+     28px  8px 0 var(--accent-dark),
+    -28px  8px 0 var(--accent-dark),
+     8px   28px 0 var(--accent-dark),
+     8px  -28px 0 var(--accent-dark),
+    -8px   28px 0 var(--accent-dark),
+    -8px  -28px 0 var(--accent-dark);
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+.anim-confetti .queue-row:not(.state-unconfirmed) .q-action {
+  animation: q-confetti-out 650ms cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+  pointer-events: none;
+}
+
+.anim-confetti .queue-row:not(.state-unconfirmed) .q-action::before {
+  animation: q-confetti-burst-a 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-confetti .queue-row:not(.state-unconfirmed) .q-action::after {
+  animation: q-confetti-burst-b 750ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 40ms;
+}
+
+/* Button itself: a quick inflate, then collapse to nothing. */
+@keyframes q-confetti-out {
+  0%   { transform: scale(1);    opacity: 1; }
+  20%  { transform: scale(1.25); opacity: 1; }
+  45%  { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(0);    opacity: 0; }
+}
+
+/* Primary particle layer: hidden at the centre, then explodes outward
+   (scale grows so the box-shadow offsets are multiplied) and fades. */
+@keyframes q-confetti-burst-a {
+  0%   { opacity: 0; transform: scale(0); }
+  20%  { opacity: 1; transform: scale(0.7); }
+  65%  { opacity: 0.85; transform: scale(2.0); }
+  100% { opacity: 0; transform: scale(3.0); }
+}
+
+@keyframes q-confetti-burst-b {
+  0%   { opacity: 0; transform: scale(0) rotate(0deg); }
+  25%  { opacity: 1; transform: scale(0.6) rotate(15deg); }
+  70%  { opacity: 0.75; transform: scale(1.9) rotate(30deg); }
+  100% { opacity: 0; transform: scale(2.8) rotate(45deg); }
+}
