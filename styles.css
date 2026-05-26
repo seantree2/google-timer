@@ -106,8 +106,9 @@ html, body {
   border: 1px solid var(--glass-border);
   border-radius: 20px;
   box-shadow: var(--glass-shadow);
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* Never show a scrollbar — content flexes/clips to fit any window size. */
+  overflow: hidden;
+  min-height: 0;
   -webkit-app-region: no-drag;
 }
 
@@ -119,26 +120,32 @@ html, body {
   list-style: none;
   display: flex; flex-direction: column;
   flex: 1;                       /* take the panel's remaining vertical space */
-  /* Each row is given a fixed slot height (panel / 10) via JS, so rows stack
-     predictably from the top: row 2 sits immediately below row 1, etc. With
-     10 rows the column fills exactly. */
   justify-content: flex-start;
   gap: 8px;
   margin-bottom: 14px;
+  overflow: hidden;              /* no scrollbar — rows flex to fit */
+  min-height: 0;
+}
+
+.queue-row {
+  flex: 1 1 0;                   /* every row grows to share the panel equally */
+  min-height: 0;                 /* can shrink without bottoming out */
+  overflow: hidden;              /* clip content if window is too small instead of overflowing */
 }
 
 .queue-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 14px;          /* taller rows = more visual weight per slot */
+  /* Padding scales with viewport so very short windows don't force a scrollbar. */
+  padding: clamp(4px, 1.4vh, 14px) 14px;
   border-radius: 12px;
-  font-size: 16px;
+  font-size: clamp(13px, 1.8vh, 16px);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
   transition: background-color 160ms ease, opacity 200ms ease;
-  background: rgba(255, 255, 255, 0.45);  /* subtle card background per row */
+  background: rgba(255, 255, 255, 0.45);
   border: 1px solid rgba(36, 36, 40, 0.06);
 }
 

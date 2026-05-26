@@ -163,7 +163,6 @@ function renumberRows() {
     row.el.querySelector('.q-index').textContent = (idx + 1) + '.';
   });
   updateAddButton();
-  updateQueueRowHeights();
   updateLockedRows();
 }
 
@@ -190,20 +189,9 @@ function updateAddButton() {
   queueAddBtn.disabled = queue.length >= QUEUE_MAX;
 }
 
-// Give every queue row a fixed slot height = panel_height / QUEUE_MAX so rows
-// stack predictably from the top. New rows fall into the next slot — they
-// don't jump positions when the count changes. With QUEUE_MAX rows the column
-// fills exactly.
-function updateQueueRowHeights() {
-  if (!queue.length) return;
-  const listH = queueList.clientHeight;
-  const gap = 8;
-  // Subtract the (QUEUE_MAX - 1) gaps so the slot height accounts for them.
-  const slotH = Math.max(44, (listH - gap * (QUEUE_MAX - 1)) / QUEUE_MAX);
-  queue.forEach(r => { r.el.style.height = slotH + 'px'; });
-}
-
-window.addEventListener('resize', updateQueueRowHeights);
+// (Row sizing is now handled purely in CSS via flex-grow: rows share the
+// queue-list height equally and shrink to fit on any window size. No JS
+// height management or resize listener required.)
 
 function buildRow() {
   if (queue.length >= QUEUE_MAX) return null;
