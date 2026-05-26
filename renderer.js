@@ -57,12 +57,20 @@ function computeTotalElapsedMs() {
 // ===== utility =====
 function pad2(n) { return String(n).padStart(2, '0'); }
 
-function formatTime(totalMs) {
+// Format the active timer's remaining time. The format chosen is determined by
+// the run's TOTAL duration, not the current remaining value — so the display
+// width stays constant throughout the countdown (no jitter from length changes
+// like "10:00" → "9:59"). Callers pass the total seconds of the run.
+function formatTime(totalMs, runTotalSec) {
   const s = Math.max(0, Math.ceil(totalMs / 1000));
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
-  return h > 0 ? `${h}:${pad2(m)}:${pad2(sec)}` : `${m}:${pad2(sec)}`;
+  const useHours = runTotalSec !== undefined ? runTotalSec >= 3600 : h > 0;
+  const padMin   = runTotalSec !== undefined && runTotalSec >= 600 && !useHours;
+  if (useHours) return `${h}:${pad2(m)}:${pad2(sec)}`;
+  if (padMin)   return `${pad2(m)}:${pad2(sec)}`;
+  return `${m}:${pad2(sec)}`;
 }
 
 function formatTotalTime(totalMs) {
@@ -80,7 +88,7 @@ function getActive() { return queue.find(q => q.id === activeId) || null; }
 function renderMain() {
   const a = getActive();
   if (a) {
-    timeContent.textContent = formatTime(a.remainingMs);
+    timeContent.textContent = formatTime(a.remainingMs, a.totalSec);
     const fraction = a.totalSec > 0
       ? Math.min(1, Math.max(0, (a.totalSec * 1000 - a.remainingMs) / (a.totalSec * 1000)))
       : 0;
