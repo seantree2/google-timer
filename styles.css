@@ -123,14 +123,8 @@ html, body {
   justify-content: flex-start;
   gap: 8px;
   margin-bottom: 14px;
-  overflow: hidden;              /* no scrollbar — rows flex to fit */
+  overflow: hidden;              /* never show a scrollbar — rows squeeze to fit */
   min-height: 0;
-}
-
-.queue-row {
-  flex: 1 1 0;                   /* every row grows to share the panel equally */
-  min-height: 0;                 /* can shrink without bottoming out */
-  overflow: hidden;              /* clip content if window is too small instead of overflowing */
 }
 
 .queue-row {
