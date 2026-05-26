@@ -1,16 +1,21 @@
 /* Variant: DEEP NAVY
    While the timer is RUNNING the accent flips from Strava orange to deep
-   navy — affecting the progress ring, the main pause button, and the "+"
-   add-row button as a cohesive trio. Everything else (paused yellow,
-   finished red, idle/ready orange) stays put. */
+   navy — the progress ring KEEPS its blue colour, and the main pause
+   button + the "+" add-row button now inherit that same blue too as a
+   cohesive trio. Paused (yellow) / finished (red) / idle (orange) states
+   are untouched. */
 
 @import url('../../styles.css');
 
 .theme-navy .timer-card.timer-running {
+  /* Shared running accent — drives the main pause button and the "+" button. */
   --accent: #1E3A8A;                           /* blue-900, deep navy */
-  --accent-dark: #172E6E;                      /* darker navy */
+  --accent-dark: #172E6E;                      /* darker navy (hover/active) */
   --accent-shadow: rgba(30, 58, 138, 0.32);
   --accent-shadow-soft: rgba(30, 58, 138, 0.22);
+  /* Explicit progress-ring colour — redundant with the --accent cascade,
+     spelled out so the ring is unambiguously blue while running. */
+  --ring-fg: #1E3A8A;
 }
 
 .theme-navy .timer-card.timer-running .progress-ring {

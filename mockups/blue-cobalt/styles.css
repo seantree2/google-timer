@@ -1,16 +1,21 @@
 /* Variant: COBALT BLUE
    While the timer is RUNNING the accent flips from Strava orange to royal
-   cobalt — affecting the progress ring, the main pause button, and the "+"
-   add-row button as a cohesive trio. Everything else (paused yellow,
-   finished red, idle/ready orange) stays put. */
+   cobalt — the progress ring KEEPS its blue colour, and the main pause
+   button + the "+" add-row button now inherit that same blue too as a
+   cohesive trio. Paused (yellow) / finished (red) / idle (orange) states
+   are untouched. */
 
 @import url('../../styles.css');
 
 .theme-cobalt .timer-card.timer-running {
+  /* Shared running accent — drives the main pause button and the "+" button. */
   --accent: #2563EB;                           /* blue-600, royal cobalt */
-  --accent-dark: #1D4ED8;                      /* blue-700 */
+  --accent-dark: #1D4ED8;                      /* blue-700 (hover/active) */
   --accent-shadow: rgba(37, 99, 235, 0.30);
   --accent-shadow-soft: rgba(37, 99, 235, 0.20);
+  /* Explicit progress-ring colour — redundant with the --accent cascade,
+     spelled out so the ring is unambiguously blue while running. */
+  --ring-fg: #2563EB;
 }
 
 .theme-cobalt .timer-card.timer-running .progress-ring {

@@ -1,16 +1,21 @@
 /* Variant: SKY BLUE
    While the timer is RUNNING the accent flips from Strava orange to sky
-   blue — affecting the progress ring, the main pause button, and the "+"
-   add-row button as a cohesive trio. Everything else (paused yellow,
-   finished red, idle/ready orange) stays put. */
+   blue — the progress ring KEEPS its blue colour, and the main pause
+   button + the "+" add-row button now inherit that same blue too as a
+   cohesive trio. Paused (yellow) / finished (red) / idle (orange) states
+   are untouched. */
 
 @import url('../../styles.css');
 
 .theme-sky .timer-card.timer-running {
+  /* Shared running accent — drives the main pause button and the "+" button. */
   --accent: #0EA5E9;                           /* cyan-500, bright sky blue */
-  --accent-dark: #0284C7;                      /* cyan-600 */
+  --accent-dark: #0284C7;                      /* cyan-600 (hover/active) */
   --accent-shadow: rgba(14, 165, 233, 0.30);
   --accent-shadow-soft: rgba(14, 165, 233, 0.20);
+  /* Explicit progress-ring colour — redundant with the --accent cascade,
+     spelled out so the ring is unambiguously blue while running. */
+  --ring-fg: #0EA5E9;
 }
 
 .theme-sky .timer-card.timer-running .progress-ring {
