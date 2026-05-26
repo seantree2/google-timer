@@ -13,7 +13,8 @@
 }
 
 /* The ::before is a fixed disc with a concentric-ring pattern (every 4px).
-   As it scales up and fades, it reads as the button "atomising" outward. */
+   As it scales up and fades, it reads as the button "atomising" outward.
+   Rings are GREEN to match the confirm-tick — never the timer's accent. */
 .anim-iris .q-action::before {
   content: '';
   position: absolute;
@@ -23,7 +24,7 @@
   background:
     repeating-radial-gradient(
       circle at center,
-      var(--accent) 0 1.5px,
+      #16A34A 0 1.5px,
       transparent 1.5px 4.5px
     );
   opacity: 0;

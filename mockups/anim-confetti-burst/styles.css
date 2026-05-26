@@ -1,9 +1,10 @@
 /* Variant: CONFETTI BURST
-   The tick button briefly inflates, then "explodes" into ~14 small orange
+   The tick button briefly inflates, then "explodes" into ~14 small green
    particles spraying outward in a radial pattern as the button itself shrinks
    to nothing. Built with two pseudo-element layers (::before, ::after), each
    carrying multiple `box-shadow` dots so we get particle variety in size,
-   shade, and trajectory — all without any JS. */
+   shade, and trajectory — all without any JS. Particle colours match the
+   confirm-tick — green throughout, never the timer's accent. */
 
 @import url('../../styles.css');
 
@@ -12,7 +13,10 @@
   overflow: visible;
 }
 
-/* Layer 1 — primary particles (8 dots, full orange, larger radius) */
+/* Particle colours match the confirm-tick green — NOT the timer's accent —
+   so the burst reads as part of the tick action, not the timer state. */
+
+/* Layer 1 — primary particles (8 dots, primary green, larger radius) */
 .anim-confetti .q-action::before {
   content: '';
   position: absolute;
@@ -21,25 +25,25 @@
   width: 4px; height: 4px;
   margin: -2px 0 0 -2px;
   border-radius: 50%;
-  background: var(--accent);
+  background: #16A34A;
   /* Eight peer dots radiating out from the centre point. When the entire
      pseudo-element scales up, all box-shadow offsets scale with it, so the
      dots burst outward together. */
   box-shadow:
-     22px  0   0 var(--accent),
-    -22px  0   0 var(--accent),
-     0    22px 0 var(--accent),
-     0   -22px 0 var(--accent),
-     16px  16px 0 var(--accent),
-    -16px  16px 0 var(--accent),
-     16px -16px 0 var(--accent),
-    -16px -16px 0 var(--accent);
+     22px  0   0 #16A34A,
+    -22px  0   0 #16A34A,
+     0    22px 0 #16A34A,
+     0   -22px 0 #16A34A,
+     16px  16px 0 #16A34A,
+    -16px  16px 0 #16A34A,
+     16px -16px 0 #16A34A,
+    -16px -16px 0 #16A34A;
   opacity: 0;
   transform: scale(0);
   pointer-events: none;
 }
 
-/* Layer 2 — secondary particles (6 dots, darker shade, offset trajectory) */
+/* Layer 2 — secondary particles (6 dots, darker green shade, offset trajectory) */
 .anim-confetti .q-action::after {
   content: '';
   position: absolute;
@@ -47,14 +51,14 @@
   width: 3px; height: 3px;
   margin: -1.5px 0 0 -1.5px;
   border-radius: 50%;
-  background: var(--accent-dark);
+  background: #128238;
   box-shadow:
-     28px  8px 0 var(--accent-dark),
-    -28px  8px 0 var(--accent-dark),
-     8px   28px 0 var(--accent-dark),
-     8px  -28px 0 var(--accent-dark),
-    -8px   28px 0 var(--accent-dark),
-    -8px  -28px 0 var(--accent-dark);
+     28px  8px 0 #128238,
+    -28px  8px 0 #128238,
+     8px   28px 0 #128238,
+     8px  -28px 0 #128238,
+    -8px   28px 0 #128238,
+    -8px  -28px 0 #128238;
   opacity: 0;
   transform: scale(0);
   pointer-events: none;

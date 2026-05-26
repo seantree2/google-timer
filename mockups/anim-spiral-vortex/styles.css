@@ -11,13 +11,14 @@
 }
 
 /* The trailing dashed ring sits just outside the button silhouette and spins
-   with its own keyframes, creating a swirling "drain" motion. */
+   with its own keyframes, creating a swirling "drain" motion. Dashes are
+   GREEN to match the confirm-tick — never the timer's accent. */
 .anim-vortex .q-action::before {
   content: '';
   position: absolute;
   inset: -3px;
   border-radius: 50%;
-  border: 2px dashed var(--accent);
+  border: 2px dashed #16A34A;
   opacity: 0;
   pointer-events: none;
   transform: scale(1) rotate(0deg);
