@@ -58,6 +58,23 @@
   --icon: var(--accent-dark);
 }
 
+/* While a timer is RUNNING the accent flips from Strava orange to COBALT
+   BLUE — drives the progress ring, the main pause button, the "+" add
+   button, and the running queue-row tint as a unified visual cue. Same
+   10%-opacity shading principle as the finished red, just in blue. */
+.timer-card.timer-running {
+  --accent: #2563EB;
+  --accent-dark: #1D4ED8;
+  --accent-soft: rgba(37, 99, 235, 0.10);
+  --accent-shadow: rgba(37, 99, 235, 0.30);
+  --accent-shadow-soft: rgba(37, 99, 235, 0.20);
+  --ring-fg: #2563EB;
+  --row-active: rgba(37, 99, 235, 0.10);
+}
+.timer-card.timer-running .progress-ring {
+  filter: drop-shadow(0 8px 20px rgba(37, 99, 235, 0.18));
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
 html, body {
   width: 100%; height: 100%; overflow: hidden;
