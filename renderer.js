@@ -89,9 +89,6 @@ function getActive() { return queue.find(q => q.id === activeId) || null; }
 
 function renderMain() {
   const a = getActive();
-  // Only the queue-done branch keeps this class — clear it every render so it
-  // never sticks to a state where the button is actively interactive.
-  startPauseBtn.classList.remove('queue-done');
   if (a) {
     timeContent.textContent = formatTime(a.remainingMs, a.totalSec);
     const fraction = a.totalSec > 0
@@ -112,33 +109,21 @@ function renderMain() {
       startPauseBtn.disabled = false;
       startPauseBtn.setAttribute('aria-label', 'Start');
     } else {
-      // completed (only reached while the alarm is firing; the .alarming
-      // overlay hides the play button entirely)
-      startPauseBtn.innerHTML = ICONS.play;
-      startPauseBtn.disabled = true;
-      startPauseBtn.setAttribute('aria-label', 'Done');
+      // completed = the timer has expired and the alarm is firing. The main
+      // button becomes a STOP control: clicking it dismisses the alarm.
+      // Stays enabled and fully coloured (the `.finished` accent makes it
+      // red, signalling the urgent stop affordance).
+      startPauseBtn.innerHTML = ICONS.stop;
+      startPauseBtn.disabled = false;
+      startPauseBtn.setAttribute('aria-label', 'Stop alarm');
     }
   } else {
     timeContent.textContent = '0:00';
     progress.style.strokeDashoffset = CIRCUMFERENCE;
     card.classList.remove('timer-running', 'paused', 'finished');
-    // After a timer has expired and the user has tapped to dismiss, the main
-    // view goes idle (activeId = null) — but if at least one timer has already
-    // run to completion in this session, show an ORANGE stop-square instead of
-    // the grayed-out play icon. Visual indicator that the run is done without
-    // implying it can be replayed. The initial empty state (nothing ever run)
-    // keeps the muted play icon so it doesn't look like a finished queue.
-    const queueDone = queue.some(r => r.state === 'completed');
-    if (queueDone) {
-      startPauseBtn.innerHTML = ICONS.stop;
-      startPauseBtn.classList.add('queue-done');
-      startPauseBtn.disabled = true;
-      startPauseBtn.setAttribute('aria-label', 'Queue complete');
-    } else {
-      startPauseBtn.innerHTML = ICONS.play;
-      startPauseBtn.disabled = true;
-      startPauseBtn.setAttribute('aria-label', 'No active timer');
-    }
+    startPauseBtn.innerHTML = ICONS.play;
+    startPauseBtn.disabled = true;
+    startPauseBtn.setAttribute('aria-label', 'No active timer');
   }
   totalValueEl.textContent = formatTotalTime(computeTotalElapsedMs());
 }
@@ -546,6 +531,13 @@ function stopAlarm() {
 // mousedown-mouseup-click sequence and occasionally double-click filtering,
 // which made fast taps feel lossy.
 function handleMainTogglePress() {
+  // While the alarm is firing the main button is the STOP control — its job
+  // is to dismiss the alarm. Handle this BEFORE the play/pause branches so it
+  // takes priority over the underlying completed-row state.
+  if (isAlarmPlaying()) {
+    dismissAlarmIfActive();
+    return;
+  }
   const a = getActive();
   if (!a) return;
   if (a.state === 'running') pauseRow(a);

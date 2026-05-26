@@ -377,16 +377,6 @@ html, body {
 .control-btn:active { background: var(--accent-dark); transform: scale(0.98); }
 .control-btn:disabled { opacity: 0.30; cursor: default; transform: none; box-shadow: none; }
 
-/* "Queue complete" indicator state — after the last timer has been dismissed
-   and there's no next-in-line, the main button shows a stop square in solid
-   orange (NOT grayed out) as a visual marker that the run is finished. */
-.control-btn.queue-done:disabled {
-  opacity: 1;
-  cursor: default;
-  background: var(--accent);
-  box-shadow: 0 2px 8px var(--accent-shadow-soft);
-  transform: none;
-}
 .control-btn svg { width: clamp(22px, 3vmin, 32px); height: clamp(22px, 3vmin, 32px); }
 /* All icon SVGs inside buttons are non-interactive — clicks always hit the
    button itself, never the inner svg/path. Fixes the "click on the icon
@@ -417,29 +407,19 @@ html, body {
   font-variant-numeric: tabular-nums;
 }
 
-/* When the alarm is going off, the whole timer area is a dismiss target */
+/* While the alarm is firing the whole timer area still acts as a dismiss
+   target (in addition to the explicit STOP button) — keep the pointer cursor
+   so the surface reads as clickable. */
 .timer-card.alarming .timer-main { cursor: pointer; }
-/* Hide the play button during the alarm — it's disabled anyway, and otherwise
-   it covers the 'TAP TO DISMISS' hint. Reappears as soon as the alarm clears. */
-.timer-card.alarming .main-controls { visibility: hidden; }
-.timer-card.alarming .timer-display::after {
-  content: 'Tap to dismiss';
-  position: absolute;
-  bottom: 6%;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent);
-  opacity: 0.7;
-  pointer-events: none;
-  animation: pulse-dismiss 1.4s ease-in-out infinite;
+
+/* Gentle attention-pulse on the STOP button while the alarm is going off so
+   the user's eye lands on it immediately. */
+.timer-card.alarming .control-btn {
+  animation: pulse-stop 1.4s ease-in-out infinite;
 }
-@keyframes pulse-dismiss {
-  0%, 100% { opacity: 0.5; }
-  50%      { opacity: 0.95; }
+@keyframes pulse-stop {
+  0%, 100% { box-shadow: 0 2px 8px var(--accent-shadow-soft); transform: scale(1); }
+  50%      { box-shadow: 0 8px 24px var(--accent-shadow);     transform: scale(1.04); }
 }
 
 /* Right-click context menu */
