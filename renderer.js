@@ -89,6 +89,13 @@ function getActive() { return queue.find(q => q.id === activeId) || null; }
 
 function renderMain() {
   const a = getActive();
+  // Mark whichever queue row is currently the active one so it shows the
+  // "featured" highlight in the queue panel — works across confirmed-ready,
+  // running, and paused states so the user always knows what's up next /
+  // what's playing.
+  queue.forEach(row => {
+    row.el.classList.toggle('is-featured', row.id === activeId);
+  });
   if (a) {
     timeContent.textContent = formatTime(a.remainingMs, a.totalSec);
     const fraction = a.totalSec > 0
@@ -431,23 +438,22 @@ function dismissAlarmIfActive() {
   }
 }
 
-// Advance to the immediate next row in the queue. If that row is confirmed,
-// AUTO-START it — pressing stop on the alarm should hand off to the next
-// timer immediately, no second click on play required. If the next row is
-// unconfirmed (or there's no row), clear activeId — the main view goes idle
-// and the user has to deal with the unconfirmed slot before anything plays.
-// Strict sequential: never skip ahead to find a confirmed row a few positions
-// later.
+// Advance activeId ONLY if the immediate next row in the queue is confirmed.
+// If that row is unconfirmed (or there's no row at all), clear activeId — the
+// main view goes idle and the user has to deal with the unconfirmed slot
+// before anything plays. Strict sequential: never skip ahead to find a
+// confirmed row a few positions later.
+//
+// The stop button only dismisses the alarm — it does NOT auto-play the next
+// timer. The next confirmed row is FEATURED in the main view (play button
+// shown, queue row highlighted via .is-featured) so the user can see what's
+// up next and press play themselves when ready.
 function advanceToNextInLine() {
   if (activeId === null) return;
   const currentIdx = queue.findIndex(r => r.id === activeId);
   const nextRow = queue[currentIdx + 1];
-  if (nextRow && nextRow.state === 'confirmed') {
-    startRow(nextRow);                // auto-runs and updates main view
-  } else {
-    activeId = null;
-    renderMain();
-  }
+  activeId = (nextRow && nextRow.state === 'confirmed') ? nextRow.id : null;
+  renderMain();
 }
 
 function deleteRow(rowId) {

@@ -144,6 +144,16 @@ html, body {
 }
 
 .queue-row:hover { background: var(--row-hover); }
+/* "Featured" — this row is the active one shown in the main view. Adds a
+   soft orange tint + accent border so the user can see at a glance what
+   timer is up next (or currently playing). Applied independent of state-X
+   so it works for confirmed-ready, running, AND paused rows. Lives BEFORE
+   the state-X background rules so running/paused can override with their
+   own (slightly stronger) tints. */
+.queue-row.is-featured {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
 .queue-row.state-running { background: var(--row-active); }
 .queue-row.state-paused { background: var(--row-paused); }
 .queue-row.state-completed { opacity: 0.4; text-decoration: line-through; }
