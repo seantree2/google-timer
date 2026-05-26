@@ -1,19 +1,14 @@
 /* Variant: COBALT BLUE
-   A classic royal/cobalt — the middle of the three blue shades. Confident
-   and saturated without veering into navy. Paused (yellow) and finished
-   (red) stay put; only the running accent changes. */
+   Strava orange everywhere by default — the BLUE only applies to the
+   progress ring (and its drop-shadow) WHILE THE TIMER IS RUNNING.
+   Paused/finished/idle states stay on the original orange/yellow/red. */
 
 @import url('../../styles.css');
 
-.theme-cobalt .timer-card {
-  --accent: #2563EB;                       /* blue-600, royal cobalt */
-  --accent-dark: #1D4ED8;                  /* blue-700 */
-  --accent-soft: rgba(37, 99, 235, 0.10);
-  --accent-shadow: rgba(37, 99, 235, 0.30);
-  --accent-shadow-soft: rgba(37, 99, 235, 0.20);
-  --bg-grad-3: #DBEAFE;                    /* blue-100 tint instead of warm */
+.theme-cobalt .timer-card.timer-running {
+  --ring-fg: #2563EB;                      /* blue-600, royal cobalt */
 }
 
-.theme-cobalt .progress-ring {
-  filter: drop-shadow(0 8px 20px rgba(37, 99, 235, 0.18));
+.theme-cobalt .timer-card.timer-running .progress-ring {
+  filter: drop-shadow(0 8px 20px rgba(37, 99, 235, 0.22));
 }

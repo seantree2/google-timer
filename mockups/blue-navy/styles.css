@@ -1,19 +1,14 @@
 /* Variant: DEEP NAVY
-   The deepest of the three — a serious, focused navy. Reads as "deep work
-   mode" rather than the energy of bright sky blue. Paused (yellow) and
-   finished (red) stay put; only the running accent changes. */
+   Strava orange everywhere by default — the BLUE only applies to the
+   progress ring (and its drop-shadow) WHILE THE TIMER IS RUNNING.
+   Paused/finished/idle states stay on the original orange/yellow/red. */
 
 @import url('../../styles.css');
 
-.theme-navy .timer-card {
-  --accent: #1E3A8A;                       /* blue-900, deep navy */
-  --accent-dark: #172E6E;                  /* darker navy */
-  --accent-soft: rgba(30, 58, 138, 0.10);
-  --accent-shadow: rgba(30, 58, 138, 0.32);
-  --accent-shadow-soft: rgba(30, 58, 138, 0.22);
-  --bg-grad-3: #E0E7FF;                    /* indigo-100 tint instead of warm */
+.theme-navy .timer-card.timer-running {
+  --ring-fg: #1E3A8A;                      /* blue-900, deep navy */
 }
 
-.theme-navy .progress-ring {
-  filter: drop-shadow(0 8px 20px rgba(30, 58, 138, 0.18));
+.theme-navy .timer-card.timer-running .progress-ring {
+  filter: drop-shadow(0 8px 20px rgba(30, 58, 138, 0.22));
 }
