@@ -412,14 +412,22 @@ html, body {
    so the surface reads as clickable. */
 .timer-card.alarming .timer-main { cursor: pointer; }
 
-/* Gentle attention-pulse on the STOP button while the alarm is going off so
+/* While the alarm is firing, the STOP button KEEPS the original Strava
+   orange — overrides the .finished red accent that's normally driving the
+   button's colour so it reads as a consistent action affordance, not a
+   change-of-state colour. Gentle attention-pulse on the orange shadow so
    the user's eye lands on it immediately. */
 .timer-card.alarming .control-btn {
+  background: #FC5200;
   animation: pulse-stop 1.4s ease-in-out infinite;
 }
+.timer-card.alarming .control-btn:hover,
+.timer-card.alarming .control-btn:active {
+  background: #DA4500;
+}
 @keyframes pulse-stop {
-  0%, 100% { box-shadow: 0 2px 8px var(--accent-shadow-soft); transform: scale(1); }
-  50%      { box-shadow: 0 8px 24px var(--accent-shadow);     transform: scale(1.04); }
+  0%, 100% { box-shadow: 0 2px 8px  rgba(252, 82, 0, 0.20); transform: scale(1); }
+  50%      { box-shadow: 0 8px 24px rgba(252, 82, 0, 0.32); transform: scale(1.04); }
 }
 
 /* Right-click context menu */
