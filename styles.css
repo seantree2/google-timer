@@ -187,10 +187,15 @@ html, body {
    with a displacement rule in renderer.js to handle first-keystroke replacement.) */
 .queue-row .q-colon { color: var(--text-muted); margin: 0 1px; font-weight: 600; }
 
-/* Action button (tick/play/pause depending on row state) */
+/* Confirm-tick action button. The q-action is ONLY visible as the green tick
+   in the unconfirmed state — the moment a row is confirmed, the CSS animation
+   below collapses the button to scale(0)/opacity(0). So its colour is locked
+   to GREEN across every state: pre-confirm and during the collapse animation
+   it reads as the same confirm affordance, never flickering to the timer's
+   accent colour mid-transition. */
 .q-action {
   margin-left: auto;
-  background: var(--accent);
+  background: #16A34A;
   border: none;
   width: 34px; height: 34px; border-radius: 50%;
   cursor: pointer;
@@ -200,39 +205,13 @@ html, body {
   transition: background-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
 }
 .q-action:hover {
-  background: var(--accent-dark);
-  transform: scale(1.08);
-  /* Hover shadow colour set later in a state-aware rule so it matches the button. */
-}
-.q-action:active { background: var(--accent-dark); transform: scale(1); }
-.q-action:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
-.q-action svg { width: 14px; height: 14px; }
-
-/* Queue row action buttons follow the card's state accent — orange normally,
-   yellow when paused, red when finished — so every play button across the app
-   moves together with the main timer's state. Hover shadow matches the button. */
-.q-action { background: var(--accent); }
-.q-action:hover {
-  background: var(--accent-dark);
-  box-shadow: 0 4px 12px var(--accent-shadow);
-}
-
-/* Unconfirmed rows keep a vivid GREEN action button (the confirm-tick).
-   This is independent of the timer state — it's a "confirm time" affordance. */
-.timer-card .queue-row.state-unconfirmed .q-action,
-.timer-card.paused .queue-row.state-unconfirmed .q-action,
-.timer-card.finished .queue-row.state-unconfirmed .q-action,
-.timer-card.alarming .queue-row.state-unconfirmed .q-action {
-  background: #16A34A;
-}
-.timer-card .queue-row.state-unconfirmed .q-action:hover,
-.timer-card.paused .queue-row.state-unconfirmed .q-action:hover,
-.timer-card.finished .queue-row.state-unconfirmed .q-action:hover,
-.timer-card.alarming .queue-row.state-unconfirmed .q-action:hover {
   background: #128238;
-  /* Green button gets a GREEN hover shadow — not the timer's state accent. */
+  transform: scale(1.08);
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.32);
 }
+.q-action:active { background: #128238; transform: scale(1); }
+.q-action:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
+.q-action svg { width: 14px; height: 14px; }
 
 /* Strict sequential ordering: only the first non-completed row's play button
    is usable. Any later state-confirmed row is locked (faded, no clicks) so
