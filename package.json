@@ -1,6 +1,6 @@
 {
   "name": "google-timer",
-  "version": "2.0.18",
+  "version": "2.0.19",
   "description": "A countdown timer with a Strava-inspired design",
   "main": "main.js",
   "scripts": {

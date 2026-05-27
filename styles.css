@@ -1,23 +1,21 @@
-/* Timer app — cobalt-blue accent on a cool off-white canvas, geometric
-   sans-serif, frosted glass panels. (Evolved from the Strava-inspired layout;
-   the base accent is now cobalt blue #2563EB across every state except
-   paused/finished.) */
+/* Timer app — Strava-inspired (locked-in design).
+   Off-white canvas, bold orange accent, geometric sans-serif, frosted glass panels. */
 
 :root {
   --bg-grad-1: #FCFCFE;
   --bg-grad-2: #F5F5F8;
-  --bg-grad-3: #EFF6FF;          /* cool blue tint */
+  --bg-grad-3: #FFF1E7;          /* warm tint */
   --canvas: #FFFFFF;
-  --accent: #2563EB;             /* cobalt blue */
-  --accent-dark: #1D4ED8;
-  --accent-soft: rgba(37, 99, 235, 0.10);
-  --accent-shadow: rgba(37, 99, 235, 0.30);
-  --accent-shadow-soft: rgba(37, 99, 235, 0.20);
+  --accent: #FC5200;             /* Strava orange */
+  --accent-dark: #DA4500;
+  --accent-soft: rgba(252, 82, 0, 0.10);
+  --accent-shadow: rgba(252, 82, 0, 0.30);
+  --accent-shadow-soft: rgba(252, 82, 0, 0.20);
   --ring-bg: rgba(36, 36, 40, 0.08);
   --ring-fg: var(--accent);
-  --btn-bg: rgba(37, 99, 235, 0.10);
-  --btn-bg-hover: rgba(37, 99, 235, 0.18);
-  --btn-bg-active: rgba(37, 99, 235, 0.28);
+  --btn-bg: rgba(252, 82, 0, 0.10);
+  --btn-bg-hover: rgba(252, 82, 0, 0.18);
+  --btn-bg-active: rgba(252, 82, 0, 0.28);
   --icon: var(--accent);
   --icon-muted: #6D6D78;
   --text: #242428;
@@ -27,11 +25,11 @@
   --glass-border: rgba(255, 255, 255, 0.78);
   --glass-shadow: 0 1px 1px rgba(36, 36, 40, 0.05), 0 8px 24px rgba(36, 36, 40, 0.08);
   --row-hover: rgba(255, 255, 255, 0.75);
-  --row-active: rgba(37, 99, 235, 0.10);
+  --row-active: rgba(252, 82, 0, 0.10);
   --row-paused: rgba(242, 169, 59, 0.14);
   --row-finished: rgba(224, 49, 69, 0.10);
   --queue-input-bg: rgba(36, 36, 40, 0.04);
-  --queue-input-focus: rgba(37, 99, 235, 0.14);
+  --queue-input-focus: rgba(252, 82, 0, 0.14);
 }
 
 .timer-card.paused {
@@ -60,9 +58,22 @@
   --icon: var(--accent-dark);
 }
 
-/* Cobalt blue is the base accent (see :root) so the running state needs no
-   override — it stays blue. Paused (yellow) and finished (red) below are the
-   only state-driven colour changes. */
+/* While a timer is RUNNING the accent flips from Strava orange to COBALT
+   BLUE — drives the progress ring, the main pause button, the "+" add
+   button, and the running queue-row tint as a unified visual cue. Same
+   10%-opacity shading principle as the finished red, just in blue. */
+.timer-card.timer-running {
+  --accent: #2563EB;
+  --accent-dark: #1D4ED8;
+  --accent-soft: rgba(37, 99, 235, 0.10);
+  --accent-shadow: rgba(37, 99, 235, 0.30);
+  --accent-shadow-soft: rgba(37, 99, 235, 0.20);
+  --ring-fg: #2563EB;
+  --row-active: rgba(37, 99, 235, 0.10);
+}
+.timer-card.timer-running .progress-ring {
+  filter: drop-shadow(0 8px 20px rgba(37, 99, 235, 0.18));
+}
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
 html, body {
@@ -151,10 +162,11 @@ html, body {
 
 .queue-row:hover { background: var(--row-hover); }
 /* "Featured" — this row is the active one shown in the main view. Soft
-   blue tint (accent-soft) lets the user see at a glance what's up next /
-   currently playing. No accent border (would read as too boxed) — the
-   subtle default border stays put. Lives BEFORE the state-X rules so
-   running/paused can layer their own tints on top. */
+   orange tint matches the running-row highlight from the reference so the
+   user can see at a glance what's up next / currently playing. No accent
+   border (would read as too boxed) — the subtle default border stays put.
+   Lives BEFORE the state-X rules so running/paused can layer their own
+   tints on top. */
 .queue-row.is-featured {
   background: var(--accent-soft);
 }
@@ -253,7 +265,7 @@ html, body {
 }
 
 /* Circular "+" button at the bottom of the queue. Follows the card's state
-   accent (blue / yellow / red) so it moves with every other button. */
+   accent (orange / yellow / red) so it moves with every other button. */
 .q-add {
   align-self: center;
   flex-shrink: 0;
@@ -331,7 +343,7 @@ html, body {
   width: min(63vh, 43vw); height: min(63vh, 43vw);
   transform: scaleX(-1) rotate(-90deg);
   display: block;
-  filter: drop-shadow(0 8px 20px rgba(37, 99, 235, 0.15));
+  filter: drop-shadow(0 8px 20px rgba(252, 82, 0, 0.15));
 }
 
 .ring-bg, .ring-fg { fill: none; stroke-width: 5; }
